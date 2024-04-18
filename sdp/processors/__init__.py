@@ -48,16 +48,16 @@ from sdp.processors.modify_manifest.data_to_data import (
     CountNumWords,
     FfmpegConvert,
     GetAudioDuration,
+    GetCER,
+    GetEdgeCER,
+    GetLenDiffRatio,
+    GetWER,
     InsIfASRInsertion,
     ReadTxtLines,
     SplitLineBySentence,
     SubIfASRSubstitution,
     SubMakeLowercase,
     SubRegex,
-    GetWER,
-    GetCER,
-    GetEdgeCER,
-    GetLenDiffRatio,
 )
 from sdp.processors.modify_manifest.data_to_dropbool import (
     DropASRError,
@@ -78,5 +78,6 @@ from sdp.processors.modify_manifest.data_to_dropbool import (
 from sdp.processors.modify_manifest.make_letters_uppercase_after_period import (
     MakeLettersUppercaseAfterPeriod,
 )
+from sdp.processors.modify_manifest.merge_two_manifests import MergeTwoManifests
 from sdp.processors.nemo.asr_inference import ASRInference, ASRInferenceParallel
 from sdp.processors.nemo.pc_inference import PCInference
