@@ -1,0 +1,33 @@
+processors_to_run: "0:" 
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/sdp_workdir
+dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/dataset
+min_duration: 0.1 # minimal duration of the segment
+max_duration: 40.0 # maximal duration of the segment
+max_wer: 75.0 # maximal word error rate
+max_cer: 30.0 # maximal char error rate
+
+processors:
+  - _target_: sdp.processors.CreateInitialManifestByExt
+    raw_data_dir: ${dataset_dir}/audios
+    extension: wav
+    output_file_key: source_audio
+    output_manifest_file: ${workspace_dir}/manifest0.json
+
+  - _target_: sdp.processors.FfmpegConvert
+    output_manifest_file: ${workspace_dir}/manifest1.json
+    resampled_audio_dir: ${workspace_dir}/wav
+    target_samplerate: 16000
+    target_nchannels: 1
+    input_file_key: source_audio
+    output_file_key: sampled_audio
+
+  - _target_: sdp.processors.CreateInitialManifestByExt
+    raw_data_dir: ${dataset_dir}/subtitles
+    extension: vtt
+    output_file_key: subtitles_filepath
+    output_manifest_file: ${workspace_dir}/manifest2.json
+
+  # - _target_: sdp.processors.modify_manifest.youtube.MergeTwoManifests
+  #   input_manifest_file2: ${workspace_dir}/manifest1.json
+  #   output_manifest_file: ${workspace_dir}/manifest3.json
+
