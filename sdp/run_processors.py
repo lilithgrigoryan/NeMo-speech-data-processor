@@ -34,7 +34,7 @@ logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter(
-    '[SDP %(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] %(message)s',
+    "[SDP %(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 handler.setFormatter(formatter)
@@ -80,7 +80,9 @@ def select_subset(input_list: List, select_str: str) -> List:
     if ":" not in select_str:
         selected_objects = [input_list[int(select_str)]]
     else:
-        slice_obj = slice(*map(lambda x: int(x.strip()) if x.strip() else None, select_str.split(":")))
+        slice_obj = slice(
+            *map(lambda x: int(x.strip()) if x.strip() else None, select_str.split(":"))
+        )
         selected_objects = input_list[slice_obj]
     return selected_objects
 
@@ -112,13 +114,20 @@ def run_processors(cfg):
         # In case user selected something that does not start from
         # manifest creation we will try to infer the input from previous
         # output file
-        if processors_cfgs[0] is not cfg.processors[0] and "input_manifest_file" not in processors_cfgs[0]:
+        if (
+            processors_cfgs[0] is not cfg.processors[0]
+            and "input_manifest_file" not in processors_cfgs[0]
+        ):
             # locating starting processor
             for idx, processor in enumerate(cfg.processors):
-                if processor is processors_cfgs[0]:  # we don't do a copy, so can just check object ids
+                if (
+                    processor is processors_cfgs[0]
+                ):  # we don't do a copy, so can just check object ids
                     if "output_manifest_file" in cfg.processors[idx - 1]:
                         with open_dict(processors_cfgs[0]):
-                            processors_cfgs[0]["input_manifest_file"] = cfg.processors[idx - 1]["output_manifest_file"]
+                            processors_cfgs[0]["input_manifest_file"] = cfg.processors[
+                                idx - 1
+                            ]["output_manifest_file"]
                     break
 
         for idx, processor_cfg in enumerate(processors_cfgs):
@@ -135,9 +144,14 @@ def run_processors(cfg):
 
             # (2) then link the current processor's output_manifest_file to the next processor's input_manifest_file
             # if it hasn't been specified (and if you are not on the last processor)
-            if idx != len(processors_cfgs) - 1 and "input_manifest_file" not in processors_cfgs[idx + 1]:
+            if (
+                idx != len(processors_cfgs) - 1
+                and "input_manifest_file" not in processors_cfgs[idx + 1]
+            ):
                 with open_dict(processors_cfgs[idx + 1]):
-                    processors_cfgs[idx + 1]["input_manifest_file"] = processor_cfg["output_manifest_file"]
+                    processors_cfgs[idx + 1]["input_manifest_file"] = processor_cfg[
+                        "output_manifest_file"
+                    ]
 
             processor = hydra.utils.instantiate(processor_cfg)
             # running runtime tests to fail right-away if something is not

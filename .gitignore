@@ -6,3 +6,5 @@ pytest-coverage.txt
 docs/html
 docs/src/sdp/config-docs/
 .hypothesis
+workdir
+asr-venv
