@@ -5,7 +5,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import List
 
 import librosa
 import numpy as np
@@ -42,7 +42,9 @@ class ManifestToUtf8(BaseProcessor):
     """
 
     def process(self):
-        with open(self.output_manifest_file, "w") as wout, open(self.input_manifest_file) as win:
+        with open(self.output_manifest_file, "w") as wout, open(
+            self.input_manifest_file
+        ) as win:
             for line in win:
                 print(json.dumps(json.loads(line), ensure_ascii=False), file=wout)
 
@@ -89,7 +91,9 @@ class CopyFiles(BaseParallelProcessor):
         os.makedirs(self.path_to_copy, exist_ok=True)
 
     def process_dataset_entry(self, data_entry):
-        rel_file_path = "/".join(data_entry[self.file_field].split("/")[-self.path_levels :])
+        rel_file_path = "/".join(
+            data_entry[self.file_field].split("/")[-self.path_levels :]
+        )
         new_file_path = os.path.join(self.path_to_copy, rel_file_path)
 
         if not os.path.isfile(new_file_path):
@@ -112,46 +116,46 @@ class GetSpecificFiles(BaseParallelProcessor):
 
         self.split_map = set(
             [
-                '0634236',
-                '0693626',
-                '0029743',
-                '0881322',
-                '0357427',
-                '0455788',
-                '0198472',
-                '0496259',
-                '0812890',
-                '0142281',
-                '0076612',
-                '0629004',
-                '0931592',
-                '0577447',
-                '0768107',
-                '0907768',
-                '0963898',
-                '0671754',
-                '0851569',
-                '0896715',
-                '0366790',
-                '0837221',
-                '0733702',
-                '0278253',
-                '0738313',
-                '0437256',
-                '0558223',
-                '0292533',
-                '0777911',
-                '0826607',
-                '0544257',
-                '0744206',
-                '0576248',
-                '0307575',
-                '0307577',
-                '0879895',
-                '0006783',
-                '0006755',
-                '0125649',
-                '0896701',
+                "0634236",
+                "0693626",
+                "0029743",
+                "0881322",
+                "0357427",
+                "0455788",
+                "0198472",
+                "0496259",
+                "0812890",
+                "0142281",
+                "0076612",
+                "0629004",
+                "0931592",
+                "0577447",
+                "0768107",
+                "0907768",
+                "0963898",
+                "0671754",
+                "0851569",
+                "0896715",
+                "0366790",
+                "0837221",
+                "0733702",
+                "0278253",
+                "0738313",
+                "0437256",
+                "0558223",
+                "0292533",
+                "0777911",
+                "0826607",
+                "0544257",
+                "0744206",
+                "0576248",
+                "0307575",
+                "0307577",
+                "0879895",
+                "0006783",
+                "0006755",
+                "0125649",
+                "0896701",
             ]
         )
 
@@ -161,7 +165,10 @@ class GetSpecificFiles(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry):
         file_id = os.path.splitext(data_entry[self.input_file_key])[0].split("/")[-1]
         if file_id in self.split_map:
-            shutil.copyfile(data_entry[self.input_file_key], os.path.join(self.path_to_copy, file_id + ".wav"))
+            shutil.copyfile(
+                data_entry[self.input_file_key],
+                os.path.join(self.path_to_copy, file_id + ".wav"),
+            )
             return [DataEntry(data=data_entry)]
         else:
             return []
@@ -198,335 +205,338 @@ class TrainDevTestSplitCC(BaseParallelProcessor):
         self.split_map["en"] = {}
         self.split_map["en"]["dev"] = set(
             [
-                '0634236',
-                '0693626',
-                '0029743',
-                '0881322',
-                '0357427',
-                '0455788',
-                '0198472',
-                '0496259',
-                '0812890',
-                '0142281',
-                '0076612',
-                '0629004',
-                '0931592',
-                '0577447',
-                '0768107',
-                '0907768',
-                '0963898',
-                '0671754',
-                '0851569',
-                '0896715',
+                "0634236",
+                "0693626",
+                "0029743",
+                "0881322",
+                "0357427",
+                "0455788",
+                "0198472",
+                "0496259",
+                "0812890",
+                "0142281",
+                "0076612",
+                "0629004",
+                "0931592",
+                "0577447",
+                "0768107",
+                "0907768",
+                "0963898",
+                "0671754",
+                "0851569",
+                "0896715",
             ]
         )
         self.split_map["en"]["test"] = set(
             [
-                '0366790',
-                '0837221',
-                '0733702',
-                '0278253',
-                '0738313',
-                '0437256',
-                '0558223',
-                '0292533',
-                '0777911',
-                '0826607',
-                '0544257',
-                '0744206',
-                '0576248',
-                '0307575',
-                '0307577',
-                '0879895',
-                '0006783',
-                '0006755',
-                '0125649',
-                '0896701',
+                "0366790",
+                "0837221",
+                "0733702",
+                "0278253",
+                "0738313",
+                "0437256",
+                "0558223",
+                "0292533",
+                "0777911",
+                "0826607",
+                "0544257",
+                "0744206",
+                "0576248",
+                "0307575",
+                "0307577",
+                "0879895",
+                "0006783",
+                "0006755",
+                "0125649",
+                "0896701",
             ]
         )
         self.split_map["de"] = {}
         self.split_map["de"]["dev"] = set(
             [
-                '0383522',
-                '0327835',
-                '0327898',
-                '0619871',
-                '0387103',
-                '0854766',
-                '0738911',
-                '0739038',
-                '0854558',
-                '0505561',
-                '0735963',
-                '0086041',
-                '0967593',
-                '0114210',
-                '0098270',
-                '0387140',
-                '0917035',
-                '0327745',
-                '0914212',
-                '0739071',
+                "0383522",
+                "0327835",
+                "0327898",
+                "0619871",
+                "0387103",
+                "0854766",
+                "0738911",
+                "0739038",
+                "0854558",
+                "0505561",
+                "0735963",
+                "0086041",
+                "0967593",
+                "0114210",
+                "0098270",
+                "0387140",
+                "0917035",
+                "0327745",
+                "0914212",
+                "0739071",
             ]
         )
         self.split_map["de"]["test"] = set(
             [
-                '0076939',
-                '0589098',
-                '0916988',
-                '0268959',
-                '0085896',
-                '0327813',
-                '0085897',
-                '0739103',
-                '0502188',
-                '0034822',
-                '0327729',
-                '0572412',
-                '0327680',
-                '0027277',
-                '0324720',
-                '0209876',
-                '0027226',
-                '0268926',
-                '0209776',
-                '0738970',
+                "0076939",
+                "0589098",
+                "0916988",
+                "0268959",
+                "0085896",
+                "0327813",
+                "0085897",
+                "0739103",
+                "0502188",
+                "0034822",
+                "0327729",
+                "0572412",
+                "0327680",
+                "0027277",
+                "0324720",
+                "0209876",
+                "0027226",
+                "0268926",
+                "0209776",
+                "0738970",
             ]
         )
         self.split_map["pl"] = {}
         self.split_map["pl"]["dev"] = set(
             [
-                '0977373',
-                '0949141',
-                '0455759',
-                '0357429',
-                '0401864',
-                '0714974',
-                '0422716',
-                '0363476',
-                '0714976',
-                '0927100',
+                "0977373",
+                "0949141",
+                "0455759",
+                "0357429",
+                "0401864",
+                "0714974",
+                "0422716",
+                "0363476",
+                "0714976",
+                "0927100",
             ]
         )
         self.split_map["pl"]["test"] = set(
             [
-                '0157903',
-                '0115644',
-                '0774572',
-                '0688432',
-                '0258376',
-                '0396163',
-                '0456013',
-                '0571489',
-                '0157653',
-                '0062567',
+                "0157903",
+                "0115644",
+                "0774572",
+                "0688432",
+                "0258376",
+                "0396163",
+                "0456013",
+                "0571489",
+                "0157653",
+                "0062567",
             ]
         )
         self.split_map["fr"] = {}
         self.split_map["fr"]["dev"] = set(
             [
-                '0588135',
-                '0706751',
-                '0533213',
-                '0920924',
-                '0355413',
-                '0985711',
-                '0113477',
-                '0533044',
-                '0089551',
-                '0944509',
-                '0944576',
-                '0766533',
-                '0263084',
-                '0113490',
-                '0647104',
-                '0273918',
-                '0473607',
-                '0706753',
-                '0800223',
-                '0300105',
-                '0944416',
-                '0566712',
-                '0533102',
-                '0177064',
-                '0029651',
-                '0215767',
-                '0054412',
-                '0236920',
-                '0885068',
-                '0296098',
-                '0113592',
-                '0706610',
-                '0473383',
-                '0330163',
-                '0681542',
-                '0272523',
-                '0985709',
-                '0564446',
-                '0944481',
-                '0587986',
-                '0804060',
-                '0236908',
-                '0969694',
-                '0054058',
-                '0800671',
-                '0236923',
-                '0986025',
-                '0770086',
-                '0825692',
-                '0968870',
-                '0152315',
-                '0533147',
-                '0647027',
-                '0029342',
-                '0272698',
-                '0153863',
-                '0355323',
-                '0988779',
-                '0985959',
-                '0237013',
-                '0338134',
-                '0885097',
-                '0507678',
-                '0507687',
-                '0944485',
-                '0825768',
-                '0742440',
-                '0969664',
-                '0885089',
-                '0117211',
-                '0296044',
-                '0985958',
-                '0214384',
-                '0021267',
-                '0565392',
-                '0388467',
-                '0151715',
-                '0861950',
-                '0112768',
-                '0113596',
-                '0621657',
-                '0236860',
-                '0647128',
-                '0058479',
-                '0803614',
-                '0177501',
-                '0533110',
-                '0566787',
-                '0944496',
-                '0859701',
-                '0885165',
-                '0212639',
-                '0054532',
-                '0919263',
-                '0740701',
+                "0588135",
+                "0706751",
+                "0533213",
+                "0920924",
+                "0355413",
+                "0985711",
+                "0113477",
+                "0533044",
+                "0089551",
+                "0944509",
+                "0944576",
+                "0766533",
+                "0263084",
+                "0113490",
+                "0647104",
+                "0273918",
+                "0473607",
+                "0706753",
+                "0800223",
+                "0300105",
+                "0944416",
+                "0566712",
+                "0533102",
+                "0177064",
+                "0029651",
+                "0215767",
+                "0054412",
+                "0236920",
+                "0885068",
+                "0296098",
+                "0113592",
+                "0706610",
+                "0473383",
+                "0330163",
+                "0681542",
+                "0272523",
+                "0985709",
+                "0564446",
+                "0944481",
+                "0587986",
+                "0804060",
+                "0236908",
+                "0969694",
+                "0054058",
+                "0800671",
+                "0236923",
+                "0986025",
+                "0770086",
+                "0825692",
+                "0968870",
+                "0152315",
+                "0533147",
+                "0647027",
+                "0029342",
+                "0272698",
+                "0153863",
+                "0355323",
+                "0988779",
+                "0985959",
+                "0237013",
+                "0338134",
+                "0885097",
+                "0507678",
+                "0507687",
+                "0944485",
+                "0825768",
+                "0742440",
+                "0969664",
+                "0885089",
+                "0117211",
+                "0296044",
+                "0985958",
+                "0214384",
+                "0021267",
+                "0565392",
+                "0388467",
+                "0151715",
+                "0861950",
+                "0112768",
+                "0113596",
+                "0621657",
+                "0236860",
+                "0647128",
+                "0058479",
+                "0803614",
+                "0177501",
+                "0533110",
+                "0566787",
+                "0944496",
+                "0859701",
+                "0885165",
+                "0212639",
+                "0054532",
+                "0919263",
+                "0740701",
             ]
         )
         self.split_map["fr"]["test"] = set(
             [
-                '0473649',
-                '0390470',
-                '0296024',
-                '0355365',
-                '0314592',
-                '0682498',
-                '0534637',
-                '0270580',
-                '0532999',
-                '0373977',
-                '0622032',
-                '0825761',
-                '0923303',
-                '0113485',
-                '0825868',
-                '0473710',
-                '0511698',
-                '0844353',
-                '0801733',
-                '0091695',
-                '0452351',
-                '0825872',
-                '0969173',
-                '0986055',
-                '0970208',
-                '0141266',
-                '0149629',
-                '0296117',
-                '0153112',
-                '0801752',
-                '0030816',
-                '0508766',
-                '0029390',
-                '0825877',
-                '0271152',
-                '0388655',
-                '0743376',
-                '0177466',
-                '0153032',
-                '0329945',
-                '0473606',
-                '0986015',
-                '0096178',
-                '0089561',
-                '0440564',
-                '0741466',
-                '0499703',
-                '0272514',
-                '0944571',
-                '0919512',
-                '0646950',
-                '0533215',
-                '0760703',
-                '0733028',
-                '0113488',
-                '0825739',
-                '0492402',
-                '0214463',
-                '0154278',
-                '0801877',
-                '0825675',
-                '0675029',
-                '0801729',
-                '0414446',
-                '0054425',
-                '0279176',
-                '0296100',
-                '0355317',
-                '0733026',
-                '0089548',
-                '0177502',
-                '0851638',
-                '0851640',
-                '0448606',
-                '0803096',
-                '0766603',
-                '0507914',
-                '0092173',
-                '0647061',
-                '0473564',
-                '0706765',
-                '0766538',
-                '0295994',
-                '0851630',
-                '0029358',
-                '0647062',
-                '0825838',
-                '0153786',
-                '0944526',
-                '0944484',
-                '0588046',
-                '0706820',
-                '0177465',
-                '0622092',
-                '0332657',
-                '0944480',
+                "0473649",
+                "0390470",
+                "0296024",
+                "0355365",
+                "0314592",
+                "0682498",
+                "0534637",
+                "0270580",
+                "0532999",
+                "0373977",
+                "0622032",
+                "0825761",
+                "0923303",
+                "0113485",
+                "0825868",
+                "0473710",
+                "0511698",
+                "0844353",
+                "0801733",
+                "0091695",
+                "0452351",
+                "0825872",
+                "0969173",
+                "0986055",
+                "0970208",
+                "0141266",
+                "0149629",
+                "0296117",
+                "0153112",
+                "0801752",
+                "0030816",
+                "0508766",
+                "0029390",
+                "0825877",
+                "0271152",
+                "0388655",
+                "0743376",
+                "0177466",
+                "0153032",
+                "0329945",
+                "0473606",
+                "0986015",
+                "0096178",
+                "0089561",
+                "0440564",
+                "0741466",
+                "0499703",
+                "0272514",
+                "0944571",
+                "0919512",
+                "0646950",
+                "0533215",
+                "0760703",
+                "0733028",
+                "0113488",
+                "0825739",
+                "0492402",
+                "0214463",
+                "0154278",
+                "0801877",
+                "0825675",
+                "0675029",
+                "0801729",
+                "0414446",
+                "0054425",
+                "0279176",
+                "0296100",
+                "0355317",
+                "0733026",
+                "0089548",
+                "0177502",
+                "0851638",
+                "0851640",
+                "0448606",
+                "0803096",
+                "0766603",
+                "0507914",
+                "0092173",
+                "0647061",
+                "0473564",
+                "0706765",
+                "0766538",
+                "0295994",
+                "0851630",
+                "0029358",
+                "0647062",
+                "0825838",
+                "0153786",
+                "0944526",
+                "0944484",
+                "0588046",
+                "0706820",
+                "0177465",
+                "0622092",
+                "0332657",
+                "0944480",
             ]
         )
 
     def process_dataset_entry(self, data_entry):
         file_id = os.path.splitext(data_entry["audio_filepath"])[0].split("/")[-2]
         if self.data_split == "train":
-            if file_id not in self.split_map[self.lang]["dev"] and file_id not in self.split_map[self.lang]["test"]:
+            if (
+                file_id not in self.split_map[self.lang]["dev"]
+                and file_id not in self.split_map[self.lang]["test"]
+            ):
                 return [DataEntry(data=data_entry)]
         else:
             if file_id in self.split_map[self.lang][self.data_split]:
@@ -551,7 +561,7 @@ class JoinBy(BaseProcessor):
         self,
         input_field: str,
         text_field: str = "text",
-        audio_field: str = 'audio_filepath',
+        audio_field: str = "audio_filepath",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -562,11 +572,15 @@ class JoinBy(BaseProcessor):
     def process(self):
         df1 = read_jsonl(self.input_manifest_file)
         pattern = re.compile("\s{2,}")
-        df1[self.text_field] = df1[self.text_field].apply(lambda x: pattern.sub(" ", x).strip())
+        df1[self.text_field] = df1[self.text_field].apply(
+            lambda x: pattern.sub(" ", x).strip()
+        )
         # df1["source"] = df1["audio_filepath"].apply(lambda x: x.split("/")[-2])
 
         df2 = pd.DataFrame(
-            df1.groupby(self.input_field).apply(lambda in_df: " ".join(in_df[self.text_field].tolist())),
+            df1.groupby(self.input_field).apply(
+                lambda in_df: " ".join(in_df[self.text_field].tolist())
+            ),
             columns=[self.text_field],
         ).reset_index()
         df2[self.audio_field] = df2[self.input_field]
@@ -610,7 +624,16 @@ class EvalBandwidth(BaseParallelProcessor):
         hop_length = int(sr * time_stride)
         n_fft = 512
         spectrogram = np.mean(
-            np.abs(librosa.stft(y=signal, n_fft=n_fft, hop_length=hop_length, window='blackmanharris')) ** 2, axis=1
+            np.abs(
+                librosa.stft(
+                    y=signal,
+                    n_fft=n_fft,
+                    hop_length=hop_length,
+                    window="blackmanharris",
+                )
+            )
+            ** 2,
+            axis=1,
         )
         power_spectrum = librosa.power_to_db(S=spectrogram, ref=np.max, top_db=100)
         freqband = 0
@@ -658,7 +681,7 @@ class SplitByAligner(BaseParallelProcessor):
 
         if math.isnan(nfa_start) or math.isnan(nfa_duration) or math.isnan(samplerate):
             print(audio_filepath, nfa_start, nfa_duration)
-            data_entry[self.output_field] = data_entry['audio_filepath']
+            data_entry[self.output_field] = data_entry["audio_filepath"]
         else:
             start = int(nfa_start * samplerate)
             duration = int(nfa_duration * samplerate)
@@ -667,8 +690,11 @@ class SplitByAligner(BaseParallelProcessor):
 
             wav_save_file = os.path.join(
                 self.splited_audio_dir,
-                '/'.join(os.path.splitext(audio_filepath)[0].split('/')[-2:]),
-                str(int(start * 1000 / samplerate)) + "-" + str(int((start + duration) * 1000 / samplerate)) + ".wav",
+                "/".join(os.path.splitext(audio_filepath)[0].split("/")[-2:]),
+                str(int(start * 1000 / samplerate))
+                + "-"
+                + str(int((start + duration) * 1000 / samplerate))
+                + ".wav",
             )
             if not os.path.isfile(wav_save_file):
                 os.makedirs(os.path.split(wav_save_file)[0], exist_ok=True)
@@ -714,19 +740,25 @@ class ASR_HF(BaseProcessor):
             else:
                 self.device = "cpu"
 
-        model = SpeechRecognitionModel(self.pretrained_model, device=self.device, letter_case=None)
+        model = SpeechRecognitionModel(
+            self.pretrained_model, device=self.device, letter_case=None
+        )
 
-        manifest, key_dict = load_manifest(Path(self.input_manifest_file), keys=["audio_filepath"])
+        manifest, key_dict = load_manifest(
+            Path(self.input_manifest_file), keys=["audio_filepath"]
+        )
         audio_paths = key_dict["audio_filepath"]
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
 
-        transcriptions = model.transcribe(paths=audio_paths, batch_size=self.batch_size, decoder=None)
+        transcriptions = model.transcribe(
+            paths=audio_paths, batch_size=self.batch_size, decoder=None
+        )
 
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for item, transcription in tqdm(zip(manifest, transcriptions)):
                 item[self.output_text_field] = transcription["transcription"]
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
 class UseSonar(BaseProcessor):
@@ -776,24 +808,32 @@ class UseSonar(BaseProcessor):
         self.batch_size = batch_size
         self.device = device
         self.text_encoder_lang = text_encoder_lang
-        self.text_encoder_model = load_sonar_text_encoder_model(text_encoder_model, device=self.device).eval()
+        self.text_encoder_model = load_sonar_text_encoder_model(
+            text_encoder_model, device=self.device
+        ).eval()
         self.text_tokenizer = load_sonar_tokenizer(text_encoder_model)
-        self.speech_encoder_model = load_sonar_speech_model(speech_encoder_model, device=self.device).eval()
+        self.speech_encoder_model = load_sonar_speech_model(
+            speech_encoder_model, device=self.device
+        ).eval()
         self.pdist = PairwiseDistance(p=2)
-        self.s2vec_model = SpeechToEmbeddingModelPipeline(encoder=self.speech_encoder_model)
-        self.text_embedding_pipeline = TextToEmbeddingModelPipeline(self.text_encoder_model, self.text_tokenizer)
+        self.s2vec_model = SpeechToEmbeddingModelPipeline(
+            encoder=self.speech_encoder_model
+        )
+        self.text_embedding_pipeline = TextToEmbeddingModelPipeline(
+            self.text_encoder_model, self.text_tokenizer
+        )
 
     def process(self):
         manifest = load_manifest(Path(self.input_manifest_file))
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for item in tqdm(manifest):
                 input_texts = [item[self.input_text_field]]
                 input_audios = [item[self.input_audio_field]]
                 dist = self.get_pdist(input_texts, input_audios)
                 item[self.output_field] = dist
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     def get_pdist(self, input_texts, input_audios):
         text_emb = self.text_embedding_pipeline.predict(
@@ -809,7 +849,11 @@ class UseSonar(BaseProcessor):
         )
         # pdist = self.pdist(text_emb, audio_emb).numpy().squeeze().astype(float).tolist()
         pdist = (
-            distance.cdist(text_emb.numpy().astype(float), audio_emb.numpy().astype(float), 'sqeuclidean')
+            distance.cdist(
+                text_emb.numpy().astype(float),
+                audio_emb.numpy().astype(float),
+                "sqeuclidean",
+            )
             .squeeze()
             .tolist()
         )
@@ -817,11 +861,12 @@ class UseSonar(BaseProcessor):
 
     def process_batch(self):
         manifest, dict_list = load_manifest(
-            Path(self.input_manifest_file), keys=[self.input_audio_field, self.input_text_field]
+            Path(self.input_manifest_file),
+            keys=[self.input_audio_field, self.input_text_field],
         )
         manifest_len = len(manifest)
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for start in tqdm(range(0, manifest_len, self.batch_size)):
                 stop = start + self.batch_size
                 input_texts = dict_list[self.input_text_field][start:stop]
@@ -831,7 +876,7 @@ class UseSonar(BaseProcessor):
                 dists = self.get_pdist(input_texts, input_audios)
                 for item, dist in zip(manifest_batch, dists):
                     item[self.output_field] = dist
-                    f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
 class BLEUScore(BaseParallelProcessor):
@@ -908,7 +953,10 @@ class Subprocess(BaseProcessor):
 
     def process(self):
         os.makedirs(os.path.dirname(self.output_manifest_file), exist_ok=True)
-        if self.cmd.find(self.input_manifest_file) != -1 or self.cmd.find(self.output_manifest_file) != -1:
+        if (
+            self.cmd.find(self.input_manifest_file) != -1
+            or self.cmd.find(self.output_manifest_file) != -1
+        ):
             logger.error(
                 "input_manifest_file "
                 + self.input_manifest_file
@@ -922,12 +970,26 @@ class Subprocess(BaseProcessor):
             if self.input_manifest_arg:
                 process_args.extend([self.input_manifest_arg, self.input_manifest_file])
             if self.output_manifest_arg:
-                process_args.extend([self.output_manifest_arg, self.output_manifest_file])
+                process_args.extend(
+                    [self.output_manifest_arg, self.output_manifest_file]
+                )
         else:
             if self.input_manifest_arg:
-                process_args.extend([self.input_manifest_arg + self.arg_separator + self.input_manifest_file])
+                process_args.extend(
+                    [
+                        self.input_manifest_arg
+                        + self.arg_separator
+                        + self.input_manifest_file
+                    ]
+                )
             if self.output_manifest_arg:
-                process_args.extend([self.output_manifest_arg + self.arg_separator + self.output_manifest_file])
+                process_args.extend(
+                    [
+                        self.output_manifest_arg
+                        + self.arg_separator
+                        + self.output_manifest_file
+                    ]
+                )
 
         subprocess.run(process_args)
 
@@ -970,13 +1032,13 @@ class NmtSubprocess(Subprocess):
 
     def process(self):
         df1 = read_jsonl(self.input_manifest_file)
-        with Path(self.srctext_file).open('w') as f:
+        with Path(self.srctext_file).open("w") as f:
             for input_field in df1[self.input_field]:
                 f.write(input_field + "\n")
 
         super().process()
 
-        with Path(self.tgtout_file).open('r') as f:
+        with Path(self.tgtout_file).open("r") as f:
             tgtout = [l.strip() for l in f]
         df1[self.output_field] = tgtout
         write_jsonl(df1, self.output_manifest_file)
@@ -1010,27 +1072,34 @@ class AlignerSubprocess(Subprocess):
         df1["source"] = df1["audio_filepath"].apply(lambda x: x.split("/")[-2])
 
         df2 = pd.DataFrame(
-            df1.groupby("source_audio").apply(lambda in_df: "|".join(in_df["text"].tolist())), columns=["text"]
+            df1.groupby("source_audio").apply(
+                lambda in_df: "|".join(in_df["text"].tolist())
+            ),
+            columns=["text"],
         ).reset_index()
-        df2['audio_filepath'] = df2['source_audio']
-        df2['duration'] = df2['audio_filepath'].apply(audio_duration)
-        df2 = df2[df2['duration'] < self.duration_threshold]
+        df2["audio_filepath"] = df2["source_audio"]
+        df2["duration"] = df2["audio_filepath"].apply(audio_duration)
+        df2 = df2[df2["duration"] < self.duration_threshold]
 
-        self.input_manifest_file = os.path.join(os.path.split(self.input_manifest_file)[0], 'tmp.json')
-        write_jsonl(df2[['audio_filepath', 'text']], self.input_manifest_file)
+        self.input_manifest_file = os.path.join(
+            os.path.split(self.input_manifest_file)[0], "tmp.json"
+        )
+        write_jsonl(df2[["audio_filepath", "text"]], self.input_manifest_file)
 
         super().process()
         manifest_path, manifest_name = os.path.split(self.input_manifest_file)
         manifest_name = os.path.splitext(manifest_name)[0]
-        aligner_path = os.path.join(manifest_path, manifest_name + "_with_output_file_paths.json")
+        aligner_path = os.path.join(
+            manifest_path, manifest_name + "_with_output_file_paths.json"
+        )
         df3 = read_jsonl(aligner_path)
         pattern = re.compile("<space>")
         df4 = pd.DataFrame()
 
         for ctm_filepath in tqdm(df3["segments_level_ctm_filepath"]):
-            source = os.path.splitext(ctm_filepath)[0].split('/')[-1]
+            source = os.path.splitext(ctm_filepath)[0].split("/")[-1]
             df6 = df1[df1["source"] == source].reset_index()
-            df5 = pd.read_csv(ctm_filepath, sep=' ', header=None, dtype={0: str})
+            df5 = pd.read_csv(ctm_filepath, sep=" ", header=None, dtype={0: str})
             df5["text"] = df5[4].apply(lambda x: pattern.sub(" ", x))
             df5["nfa_start"] = df5[2]
             df5["nfa_duration"] = df5[3]
@@ -1064,51 +1133,53 @@ class Lang2Iso(BaseParallelProcessor):
         self.input_lang_key = input_lang_key
         self.output_lang_key = output_lang_key
         self.iso_m = {
-            'English': 'en',
-            'Spanish': 'es',
-            'Basque': 'eu',
-            'Dutch': 'nl',
-            'Welsh': 'cy',
-            'Italian': 'it',
-            'Catalan': 'ca',
-            'Maltese': 'mt',
-            'Swedish': 'sv',
-            'French': 'fr',
-            'German': 'de',
-            'Chuvash': 'cv',
-            'Kinyarwanda': 'rw',
-            'Polish': 'pl',
-            'Kabyle': 'kab',
-            'Interlingua': 'ua',
-            'Portuguese': 'pt',
-            'Hakha_Chin': 'cnh',
-            'Romansh_Sursilvan': 'roh',
-            'Breton': 'br',
-            'Esperanto': 'epo',
-            'Czech': 'ces',
-            'Latvian': 'lav',
-            'Indonesian': 'ind',
-            'Slovenian': 'slv',
-            'Turkish': 'tur',
-            'Frisian': 'frr',
-            'Tatar': 'tat',
-            'Persian': 'fas',
-            'Estonian': 'est',
-            'Romanian': 'rum',
-            'Chinese_Hongkong': 'zh',
-            'Chinese_Taiwan': 'zh',
-            'Chinese_China': 'zh',
-            'Georgian': 'kat',
-            'Kyrgyz': 'kir',
-            'Dhivehi': 'div',
-            'Sakha': 'sah',
-            'Arabic': 'ar',
-            'Japanese': 'ja',
-            'Russian': 'ru',
+            "English": "en",
+            "Spanish": "es",
+            "Basque": "eu",
+            "Dutch": "nl",
+            "Welsh": "cy",
+            "Italian": "it",
+            "Catalan": "ca",
+            "Maltese": "mt",
+            "Swedish": "sv",
+            "French": "fr",
+            "German": "de",
+            "Chuvash": "cv",
+            "Kinyarwanda": "rw",
+            "Polish": "pl",
+            "Kabyle": "kab",
+            "Interlingua": "ua",
+            "Portuguese": "pt",
+            "Hakha_Chin": "cnh",
+            "Romansh_Sursilvan": "roh",
+            "Breton": "br",
+            "Esperanto": "epo",
+            "Czech": "ces",
+            "Latvian": "lav",
+            "Indonesian": "ind",
+            "Slovenian": "slv",
+            "Turkish": "tur",
+            "Frisian": "frr",
+            "Tatar": "tat",
+            "Persian": "fas",
+            "Estonian": "est",
+            "Romanian": "rum",
+            "Chinese_Hongkong": "zh",
+            "Chinese_Taiwan": "zh",
+            "Chinese_China": "zh",
+            "Georgian": "kat",
+            "Kyrgyz": "kir",
+            "Dhivehi": "div",
+            "Sakha": "sah",
+            "Arabic": "ar",
+            "Japanese": "ja",
+            "Russian": "ru",
         }
 
     def process_dataset_entry(self, data_entry):
-        data_entry[self.output_lang_key] = self.iso_m.get(data_entry[self.input_lang_key], None)
+        data_entry[self.output_lang_key] = self.iso_m.get(
+            data_entry[self.input_lang_key], None
+        )
         return [DataEntry(data=data_entry)]
 
 
@@ -1132,10 +1203,13 @@ class SplitByVtt(BaseParallelProcessor):
         audio_file = data_entry[self.source_audio_key]
         if not os.path.exists(audio_file):
             return []
-        segments = parse_srt(caption_file, verify_duration=True, wav_filepath=audio_file)
+        segments = parse_srt(
+            caption_file, verify_duration=True, wav_filepath=audio_file
+        )
 
         if len(segments) > 0:
-            data_entry['segments'] = [segment.__dict__ for segment in segments]
+            data_entry["segments"] = [segment.__dict__ for segment in segments]
+
         return [DataEntry(data=data_entry)]
 
 
@@ -1187,7 +1261,7 @@ class SplitByVttSentence(BaseParallelProcessor):
         if os.path.isfile(source_audio):
             data, samplerate = sf.read(source_audio)
             text_list, start_s, end_s = split_by_vtt_new(caption_file, samplerate)
-            text_c = ''
+            text_c = ""
             start_c, end_c = 0, 0
             if text_list:
                 for text, start_sr, end_sr in zip(text_list, start_s, end_s):
@@ -1203,25 +1277,46 @@ class SplitByVttSentence(BaseParallelProcessor):
                         or text_c[-1] == "?"
                     ):
                         res_list.append(
-                            self.makeDataEntry(data_entry, data, caption_file, samplerate, text_c, start_c, end_c)
+                            self.makeDataEntry(
+                                data_entry,
+                                data,
+                                caption_file,
+                                samplerate,
+                                text_c,
+                                start_c,
+                                end_c,
+                            )
                         )
-                        text_c = ''
+                        text_c = ""
                         start_c, end_c = 0, 0
                     else:
                         pass
                 if len(text_c) > 0 and start_c != 0:
                     res_list.append(
-                        self.makeDataEntry(data_entry, data, caption_file, samplerate, text_c, start_c, end_c)
+                        self.makeDataEntry(
+                            data_entry,
+                            data,
+                            caption_file,
+                            samplerate,
+                            text_c,
+                            start_c,
+                            end_c,
+                        )
                     )
 
         return res_list
 
-    def makeDataEntry(self, data_entry, data, vtt_file, samplerate, text_c, start_c, end_c):
+    def makeDataEntry(
+        self, data_entry, data, vtt_file, samplerate, text_c, start_c, end_c
+    ):
         data_sample = data[start_c:end_c]
         wav_save_file = os.path.join(
             self.splited_audio_dir,
-            '/'.join(os.path.splitext(vtt_file)[0].split('/')[-2:]),
-            str(int(start_c / (samplerate / 1000))) + "-" + str(int(end_c / (samplerate / 1000))) + ".wav",
+            "/".join(os.path.splitext(vtt_file)[0].split("/")[-2:]),
+            str(int(start_c / (samplerate / 1000)))
+            + "-"
+            + str(int(end_c / (samplerate / 1000)))
+            + ".wav",
         )
         if not os.path.isfile(wav_save_file):
             os.makedirs(os.path.split(wav_save_file)[0], exist_ok=True)
@@ -1277,7 +1372,9 @@ class AudioLid(BaseProcessor):
         import nemo.collections.asr as nemo_asr
         import torch  # importing after nemo to make sure users first install nemo, instead of torch, then nemo
 
-        model = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(model_name=self.pretrained_model)
+        model = nemo_asr.models.EncDecSpeakerLabelModel.from_pretrained(
+            model_name=self.pretrained_model
+        )
 
         if self.device is None:
             if torch.cuda.is_available():
@@ -1290,19 +1387,21 @@ class AudioLid(BaseProcessor):
         manifest = load_manifest(Path(self.input_manifest_file))
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for item in tqdm(manifest):
                 audio_file = item[self.input_audio_key]
 
                 try:
-                    lang = model.get_label(audio_file, self.segment_duration, self.num_segments)
+                    lang = model.get_label(
+                        audio_file, self.segment_duration, self.num_segments
+                    )
                 except Exception as e:
                     logger.warning("AudioLid " + audio_file + " " + str(e))
                     lang = None
 
                 if lang:
                     item[self.output_lang_key] = lang
-                    f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
 class TextLid(BaseProcessor):
@@ -1340,7 +1439,9 @@ class TextLid(BaseProcessor):
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
         tokenizer = AutoTokenizer.from_pretrained(self.pretrained_model)
-        text_model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_model)
+        text_model = AutoModelForSequenceClassification.from_pretrained(
+            self.pretrained_model
+        )
 
         if self.device is None:
             if torch.cuda.is_available():
@@ -1354,7 +1455,7 @@ class TextLid(BaseProcessor):
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
         text_set = set()
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for item in tqdm(manifest):
                 text = item[self.input_text_key]
                 if self.drop_duplicates and text not in text_set:
@@ -1366,7 +1467,7 @@ class TextLid(BaseProcessor):
 
                     if lid:
                         item[self.output_lang_key] = lid
-                        f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                        f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
 class AllVttText(BaseParallelProcessor):
@@ -1483,11 +1584,17 @@ class ReadParquet(BaseParallelProcessor):
         self.raw_data_dir = Path(raw_data_dir)
 
     def prepare(self):
-        parquets = [str(self.raw_data_dir / p) for p in self.raw_data_dir.rglob('*.parquet')]
+        parquets = [
+            str(self.raw_data_dir / p) for p in self.raw_data_dir.rglob("*.parquet")
+        ]
         self.urls = None
         for parquet in tqdm(parquets):
             try:
-                df1 = pd.read_parquet(parquet, engine='fastparquet').sort_values("key").set_index("key")
+                df1 = (
+                    pd.read_parquet(parquet, engine="fastparquet")
+                    .sort_values("key")
+                    .set_index("key")
+                )
                 if self.urls is None:
                     self.urls = df1
                 else:
@@ -1499,8 +1606,8 @@ class ReadParquet(BaseParallelProcessor):
         key = data_entry[self.id_key]
         key = key.split("/")[1]
         try:
-            data_entry[self.output_video_key] = self.urls.loc[key]['url']
-            data_entry[self.output_caption_key] = self.urls.loc[key]['caption']
+            data_entry[self.output_video_key] = self.urls.loc[key]["url"]
+            data_entry[self.output_caption_key] = self.urls.loc[key]["caption"]
         except:
             data_entry[self.output_video_key] = "NN"
             data_entry[self.output_caption_key] = "NN"
@@ -1549,8 +1656,12 @@ class CreateInitialManifestCC(BaseParallelProcessor):
         os.makedirs(self.raw_data_dir, exist_ok=True)
 
     def read_manifest(self):
-        videos = [str(self.raw_data_dir / video) for video in self.raw_data_dir.rglob('*.jpg')]
-        texts = [str(self.raw_data_dir / text) for text in self.raw_data_dir.rglob('*.txt')]
+        videos = [
+            str(self.raw_data_dir / video) for video in self.raw_data_dir.rglob("*.jpg")
+        ]
+        texts = [
+            str(self.raw_data_dir / text) for text in self.raw_data_dir.rglob("*.txt")
+        ]
         v_df = pd.DataFrame({self.video_key: videos})
         t_df = pd.DataFrame({self.text_key: texts})
 

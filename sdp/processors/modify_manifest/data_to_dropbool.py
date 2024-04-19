@@ -311,7 +311,9 @@ class DropIfNoneOfRegexMatch(BaseParallelProcessor):
         for value in metrics:
             if value:
                 total_counter += value
-        logger.info("Num of utterances that were dropped due to not containing any of the specified regex patterns")
+        logger.info(
+            "Num of utterances that were dropped due to not containing any of the specified regex patterns"
+        )
         logger.info(f"{total_counter}")
         super().finalize(metrics)
 
@@ -362,7 +364,7 @@ class DropNonAlphabet(BaseParallelProcessor):
                 total_counter[char] += value
         logger.info("Num of non-alphabet characters")
         for char, count in total_counter.items():
-            logger.info(f"{char}: {count}")
+            logger.info(f"[    {char}    ]: {count}")
         super().finalize(metrics)
 
 
@@ -407,26 +409,40 @@ class DropASRErrorBeginningEnd(BaseParallelProcessor):
         self.pred_text_key = pred_text_key
 
     def process_dataset_entry(self, data_entry) -> List:
-        orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+        orig_words, pred_words = (
+            data_entry[self.text_key],
+            data_entry[self.pred_text_key],
+        )
 
         diff = get_diff_with_subs_grouped(orig_words, pred_words)
 
         if len(diff) > 0:  # i.e. if there are differences between text and pred_text
             first_diff_entry = diff[0]
-            if first_diff_entry[0] == 1 or first_diff_entry[0] == -1:  # i.e. diff is purely an insertion or deletion
+            if (
+                first_diff_entry[0] == 1 or first_diff_entry[0] == -1
+            ):  # i.e. diff is purely an insertion or deletion
                 if len(first_diff_entry[1]) > self.beginning_error_char_threshold:
                     return [DataEntry(data=None, metrics=(1, 0))]
-            elif first_diff_entry[0] != 0:  # i.e. diff should be a tuple representing substitution
+            elif (
+                first_diff_entry[0] != 0
+            ):  # i.e. diff should be a tuple representing substitution
                 len_deletion = len(first_diff_entry[0][1])
                 len_insertion = len(first_diff_entry[1][1])
-                if abs(len_deletion - len_insertion) > self.beginning_error_char_threshold:
+                if (
+                    abs(len_deletion - len_insertion)
+                    > self.beginning_error_char_threshold
+                ):
                     return [DataEntry(data=None, metrics=(1, 0))]
 
             last_diff_entry = diff[-1]
-            if last_diff_entry[0] == 1 or last_diff_entry[0] == -1:  # i.e. diff is purely an insertion or deletion
+            if (
+                last_diff_entry[0] == 1 or last_diff_entry[0] == -1
+            ):  # i.e. diff is purely an insertion or deletion
                 if len(last_diff_entry[1]) > self.end_error_char_threshold:
                     return [DataEntry(data=None, metrics=(0, 1))]
-            elif last_diff_entry[0] != 0:  # i.e. diff should be a tuple representing substitution
+            elif (
+                last_diff_entry[0] != 0
+            ):  # i.e. diff should be a tuple representing substitution
                 len_deletion = len(last_diff_entry[0][1])
                 len_insertion = len(last_diff_entry[1][1])
                 if abs(len_deletion - len_insertion) > self.end_error_char_threshold:
@@ -480,7 +496,10 @@ class DropASRError(BaseParallelProcessor):
         self.pred_text_key = pred_text_key
 
     def process_dataset_entry(self, data_entry) -> List:
-        orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+        orig_words, pred_words = (
+            data_entry[self.text_key],
+            data_entry[self.pred_text_key],
+        )
         diffs = get_diff(orig_words, pred_words)
 
         for diff_entry in diffs:
@@ -630,7 +649,10 @@ class DropLowWordMatchRate(BaseParallelProcessor):
         self.pred_text_key = pred_text_key
 
     def process_dataset_entry(self, data_entry) -> List:
-        orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+        orig_words, pred_words = (
+            data_entry[self.text_key],
+            data_entry[self.pred_text_key],
+        )
         wmr = get_wmr(orig_words, pred_words)
         if wmr < self.wmr_threshold:
             return [DataEntry(data=None, metrics=1)]
@@ -775,7 +797,10 @@ class DropIfSubstringInInsertion(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry) -> List:
         for substring_in_insertion in self.substrings_in_insertion:
             if substring_in_insertion in data_entry[self.pred_text_key]:
-                orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+                orig_words, pred_words = (
+                    data_entry[self.text_key],
+                    data_entry[self.pred_text_key],
+                )
                 diff = get_diff_with_subs_grouped(orig_words, pred_words)
 
                 for diff_entry in diff:
@@ -790,7 +815,9 @@ class DropIfSubstringInInsertion(BaseParallelProcessor):
             if diff_entry:
                 total_counter[diff_entry] += 1
         logger.info("Some of the insertions that cause the utterance to be dropped:")
-        total_counter_sorted = dict(sorted(total_counter.items(), key=lambda x: x[1], reverse=True))
+        total_counter_sorted = dict(
+            sorted(total_counter.items(), key=lambda x: x[1], reverse=True)
+        )
 
         for insertion, count in total_counter_sorted.items():
             logger.info(f"{insertion}, {count}")

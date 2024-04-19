@@ -55,13 +55,17 @@ class AggregatedSegment(RawSegment):
         self.text_lang = text_lang
         self.source_audio = source_audio
         self.audio_filepath = (
-            os.path.join(output_audio_dir, f'{self.segment_id}.wav') if output_audio_dir is not None else None
+            os.path.join(output_audio_dir, f"{self.segment_id}.wav")
+            if output_audio_dir is not None
+            else None
         )
 
     def aggregate(self, segment):
         self.end_time = segment.end_time
         self.duration = self.end_time - self.start_time
-        self.orig_text = re.sub("\s+", " ", f"{self.orig_text} {segment.orig_text}".strip())
+        self.orig_text = re.sub(
+            "\s+", " ", f"{self.orig_text} {segment.orig_text}".strip()
+        )
 
 
 @dataclass
@@ -74,13 +78,17 @@ class Sample:
 
     def to_dataentry(self):
         data = self.__dict__
-        data['segments'] = (
-            [segment.data.__dict__ for segment in data['segments']] if data['segments'] is not None else []
+        data["segments"] = (
+            [segment.data.__dict__ for segment in data["segments"]]
+            if data["segments"] is not None
+            else []
         )
         return DataEntry(data=data)
 
 
-def get_audio_segment(audio, start_time: float, end_time: float, output_audio_filepath: str = None):
+def get_audio_segment(
+    audio, start_time: float, end_time: float, output_audio_filepath: str = None
+):
     start_time = start_time * 1000
     end_time = end_time * 1000
     audio_segment = audio[start_time:end_time]
@@ -106,9 +114,13 @@ def parse_srt(srt_filepath, verify_duration: bool = True, wav_filepath: str = No
 
     epsilon = 1e-2
 
-    for sub in subs:
+    for sub_index, sub in enumerate(subs):
+        if sub.index:
+            index = sub.index
+        else:
+            index = sub_index
         segment = RawSegment(
-            segment_id=sub.index,
+            segment_id=index,
             start_time=sub.start.ordinal / 1000,
             end_time=sub.end.ordinal / 1000,
             orig_text=sub.text_without_tags,
@@ -117,8 +129,12 @@ def parse_srt(srt_filepath, verify_duration: bool = True, wav_filepath: str = No
         duration_by_timestemps = segment.end_time - segment.start_time
 
         if audio:
-            segment.duration = get_audio_segment_duration(audio, segment.start_time, segment.end_time)
-            segment.duration_match = abs(segment.duration - duration_by_timestemps) < epsilon
+            segment.duration = get_audio_segment_duration(
+                audio, segment.start_time, segment.end_time
+            )
+            segment.duration_match = (
+                abs(segment.duration - duration_by_timestemps) < epsilon
+            )
         else:
             segment.duration = duration_by_timestemps
 

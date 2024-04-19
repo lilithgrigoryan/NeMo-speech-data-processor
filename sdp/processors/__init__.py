@@ -33,6 +33,10 @@ from sdp.processors.datasets.voxpopuli.create_initial_manifest import (
 from sdp.processors.datasets.voxpopuli.normalize_from_non_pc_text import (
     NormalizeFromNonPCTextVoxpopuli,
 )
+from sdp.processors.datasets.youtube_vtt import CreateInitialManifestByExtByCsv
+from sdp.processors.datasets.youtube_vtt.merge_two_manifests import (
+    MergeTwoManifestsByKey,
+)
 from sdp.processors.huggingface.speech_recognition import ASRTransformers, ASRWhisper
 from sdp.processors.modify_manifest.common import (
     AddConstantFields,
@@ -79,6 +83,5 @@ from sdp.processors.modify_manifest.data_to_dropbool import (
 from sdp.processors.modify_manifest.make_letters_uppercase_after_period import (
     MakeLettersUppercaseAfterPeriod,
 )
-from sdp.processors.modify_manifest.merge_two_manifests import MergeTwoManifests
 from sdp.processors.nemo.asr_inference import ASRInference, ASRInferenceParallel
 from sdp.processors.nemo.pc_inference import PCInference

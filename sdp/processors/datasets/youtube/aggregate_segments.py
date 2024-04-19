@@ -24,6 +24,8 @@ from sdp.processors.datasets.youtube.utils import (
 class AggregateSegments(BaseParallelProcessor):
     def __init__(
         self,
+        sample_id: str = "sample_id",
+        segments: str = "segments",
         source_audio_key: str = "audio_filepath",
         splited_audio_key: str = "audio_filepath",
         max_duration: float = 40.0,
@@ -37,27 +39,42 @@ class AggregateSegments(BaseParallelProcessor):
         self.splited_audio_key = splited_audio_key
         self.crop_audio_segments = crop_audio_segments
         self.output_segments_audio_dir = output_segments_audio_dir
+        self.sample_id = sample_id
+        self.segments = segments
 
     def prepare(self):
         if self.crop_audio_segments and self.output_segments_audio_dir:
             os.makedirs(os.path.join(self.output_segments_audio_dir), exist_ok=True)
 
     def process_dataset_entry(self, data_entry: dict):
-        sample_id = data_entry['sample_id']
-        segments = data_entry['segments']
+        if "segments" not in data_entry:
+            print(f"No segemnts in data entry {data_entry}")
+            return []
+        sample_id = data_entry[self.sample_id]
+        segments = data_entry[self.segments]
         agg_segments = []
 
         if len(segments) == 0:
             return agg_segments
 
         first_segment = RawSegment(**segments[0])
+        if "audio_lang" in data_entry:
+            audio_lang = data_entry["audio_lang"]
+        else:
+            audio_lang = "n/a"
+
+        if "text_lang" in data_entry:
+            text_lang = data_entry["text_lang"]
+        else:
+            text_lang = "n/a"
+
         agg_segment = AggregatedSegment(
             segment=first_segment,
             segment_id=1,
             sample_id=sample_id,
             output_audio_dir=self.output_segments_audio_dir,
-            audio_lang=data_entry['audio_lang'],
-            text_lang=data_entry['text_lang'],
+            audio_lang=audio_lang,
+            text_lang=text_lang,
             source_audio=data_entry[self.source_audio_key],
         )
 
@@ -74,8 +91,8 @@ class AggregateSegments(BaseParallelProcessor):
                     segment=segment,
                     segment_id=len(agg_segments) + 1,
                     sample_id=sample_id,
-                    audio_lang=data_entry['audio_lang'],
-                    text_lang=data_entry['text_lang'],
+                    audio_lang=audio_lang,
+                    text_lang=text_lang,
                     source_audio=data_entry[self.source_audio_key],
                     output_audio_dir=self.output_segments_audio_dir,
                 )
@@ -89,8 +106,8 @@ class AggregateSegments(BaseParallelProcessor):
             for agg_segment in agg_segments:
                 get_audio_segment(
                     audio=audio,
-                    start_time=agg_segment.data['start_time'],
-                    end_time=agg_segment.data['end_time'],
+                    start_time=agg_segment.data["start_time"],
+                    end_time=agg_segment.data["end_time"],
                     output_audio_filepath=agg_segment.data[self.splited_audio_key],
                 )
 

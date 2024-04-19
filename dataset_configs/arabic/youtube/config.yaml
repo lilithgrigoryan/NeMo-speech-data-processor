@@ -1,55 +1,125 @@
-# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config.yaml" processors_to_run="all"
-# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config.yaml" processors_to_run="all"
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config.yaml"
 
-processors_to_run: "0:"
-workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir
+processors_to_run: "12:"
+
+split: clean_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir
+
 min_duration: 0.1 # minimal duration of the segment
 max_duration: 40.0 # maximal duration of the segment
-max_wer: 75.0 # maximal word error rate
-max_cer: 30.0 # maximal char error rate
 
 processors:
-  - _target_: sdp.processors.CreateInitialManifestByExt
-    raw_data_dir: ${dataset_dir}/audios
+  # 0 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateInitialManifestByExtByCsv
+    dataset_dir: ${dataset_dir}/audios
+    csv_file_path: ${dataset_dir}/subsets/${split}.csv
+    csv_primary_key: video_id
     extension: wav
-    output_file_key: source_audio_path
+    save_sample_ids: True
+    output_manifest_sample_id_key: sample_id
+    output_manifest_result_path_key: raw_audio_file_path
     output_manifest_file: ${workspace_dir}/manifest0.json
 
+  # 1 resampling audios to the same sample rate
   - _target_: sdp.processors.FfmpegConvert
-    output_manifest_file: ${workspace_dir}/manifest1.json
     resampled_audio_dir: ${workspace_dir}/wav
     target_samplerate: 16000
     target_nchannels: 1
-    input_file_key: source_audio_path
-    output_file_key: sampled_audio_path
+    input_file_key: raw_audio_file_path
+    output_file_key: audio_file_path
+    output_manifest_file: ${workspace_dir}/manifest1.json
 
-  - _target_: sdp.processors.CreateInitialManifestByExt
-    raw_data_dir: ${dataset_dir}/subtitles
-    extension: vtt
-    output_file_key: subtitles_path
+  # 2 creating manifest {sample_id, vtt_path}
+  - _target_: sdp.processors.CreateInitialManifestByExtByCsv
+    dataset_dir: ${dataset_dir}/subtitles
+    csv_file_path: ${dataset_dir}/subsets/${split}.csv
+    csv_primary_key: video_id
+    extension: ar.vtt
+    save_sample_ids: True
+    output_manifest_sample_id_key: sample_id
+    output_manifest_result_path_key: vtt_file_path
     output_manifest_file: ${workspace_dir}/manifest2.json
 
-  - _target_: sdp.processors.MergeTwoManifests
-    id_key1: subtitles_path
-    id_key2: source_audio_path
+  # 3 merging audios manifest with vtts manifest by common key sample_id
+  - _target_: sdp.processors.MergeTwoManifestsByKey
+    key: sample_id
     input_manifest_file2: ${workspace_dir}/manifest1.json
     output_manifest_file: ${workspace_dir}/manifest3.json
 
-  - _target_: sdp.processors.GetAudioDuration
+  # 4 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["sample_id", "audio_file_path", "vtt_file_path"]
     output_manifest_file: ${workspace_dir}/manifest4.json
-    audio_file_key: sampled_audio_path
-    duration_key: sampled_audio_duration
 
-  - _target_: sdp.processors.PreserveByValue
+  # 5 calculating durations
+  - _target_: sdp.processors.GetAudioDuration
+    audio_file_key: audio_file_path
+    duration_key: audio_duration
     output_manifest_file: ${workspace_dir}/manifest5.json
-    input_value_key: sampled_audio_duration
+
+  # 6 removing negative durations
+  - _target_: sdp.processors.PreserveByValue
+    input_value_key: audio_duration
     target_value: 0
     operator: gt
-
-  - _target_: sdp.processors.datasets.commoncrawl.AllVttText 
     output_manifest_file: ${workspace_dir}/manifest6.json
-    input_filepath_key: subtitles_path
-    output_text_key: vtt_text
 
+  # 7 splitting by vtt
+  # TODO: check if splitting by vtt sentences works better
+  - _target_: sdp.processors.datasets.commoncrawl.SplitByVtt
+    source_audio_key: audio_file_path
+    caption_file_key: vtt_file_path
+    output_text_key: splitted_vtt_text
+    output_manifest_file:
+      ${workspace_dir}/manifest7.json
+
+
+  # 8 Aggregating segments
+  - _target_: sdp.processors.datasets.youtube.AggregateSegments
+    # sample_id: sample_id
+    source_audio_key: audio_file_path
+    max_duration: ${max_duration}
+    output_segments_audio_dir: ${workspace_dir}/wav_segments
+    output_manifest_file: ${workspace_dir}/manifest8.json
+
+  # 9 Dropping too short and too long segments
+  - _target_: sdp.processors.DropHighLowDuration
+    output_manifest_file: ${workspace_dir}/manifest9.json
+    high_duration_threshold: ${max_duration}
+    low_duration_threshold: ${min_duration}
+
+  # # 11 Dropping too short and too long segments
+  # - _target_: sdp.processors.DropHighLowDuration
+  #   input_manifest_file: ${workspace_dir}/manifest8.json
+  #   output_manifest_file: ${workspace_dir}/manifest9H.json
+  #   low_duration_threshold: ${max_duration}
+  #   high_duration_threshold: 100.0
+
+  # # 10 Dropping too short and too long segments
+  # - _target_: sdp.processors.DropHighLowDuration
+  #   input_manifest_file: ${workspace_dir}/manifest8.json
+  #   output_manifest_file: ${workspace_dir}/manifest9L.json
+  #   high_duration_threshold: ${min_duration}
+  #   low_duration_threshold: 0.0
+
+  # 10 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["audio_filepath", "duration", "orig_text"]
+    output_manifest_file: ${workspace_dir}/manifest10.json
+
+  # 11 renaming fields accordingly
+  - _target_: sdp.processors.RenameFields
+    rename_fields: { "orig_text": "text" }
+    output_manifest_file: ${workspace_dir}/manifest11.json
+
+  # 12 dropping non alphabetical symbols
+  - _target_: sdp.processors.DropNonAlphabet
+    alphabet: "[]()\"-0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM.,: ؆؇؈؉؊؋،؍؎؏ؘؙؐؑؒؓؔؕؖؗ؛d؞؟ؠءآأؤإئابةتثجحخدذرزسشصضطظعغػؼؽؾؿـفقكلمنهوىيًٌٍَُِّْٓٔ٠١٢٣٤٥٦٧٨٩٪٫٬٭ٮٯٰٱٲٳٴٵٶٷٸٹٺٻټٽپٿڀځڂڃڄڅچڇڈډڊڋڌڍڎڏڐڑڒړڔڕږڗژڙښڛڜڝڞڟڠڡڢڣڤڥڦڧڨکڪګڬڭڮگڰڱڲڳڴڵڶڷڸڹںڻڼڽھڿۀہۂۃۄۅۆۇۈۉۊۋیۍێۏېۑےۓ۔ەۖۗۘۙۚۛۜ\u06dd۞ۣ۟۠ۡۢۤۥۦۧۨ۩۪ۭ۫۬ۮۯ۰۱۲۳۴۵۶۷۸۹ۺۻۼ۽۾ۿ"
+    # alphabet: ".,: ،ٌٍٍّڤپَُ؟ًِْؠءآأؤإئاﺍﺎبﺏﺐﺒﺑتﺕﺖﺘﺗثﺙﺚﺜﺛجﺝﺞﺠﺟحﺡﺢﺤﺣخﺥﺦﺨﺧدﺩﺪذﺫﺬرﺭﺮزﺯﺰسﺱﺲﺴﺳشﺵﺶﺸﺷصﺹﺺﺼﺻضﺽﺾﻀﺿطﻁﻂﻄﻃظﻅﻆﻈﻇعﻉﻊﻌﻋغﻍﻎﻐﻏفﻑﻒﻔﻓقﻕﻖﻘﻗكﻙﻚﻜﻛلﻝﻞﻠﻟمﻡﻢﻤﻣنﻥﻦﻨﻧهﻩﻪﻬﻫوﻭﻮيﻱﻲﻴﻳآﺁﺂةﺓﺔىﻯﻰ"
+    # alphabet: '\u0627\u0628\u0629\u0630\u0631\u0632\u0633\u0633'
+    output_manifest_file: ${workspace_dir}/manifest12.json
+    # test_cases:
+    #   - {input: {text: "test тест 测试"}, output: null}
+    #   - {input: {text: "test"}, output: {text: "test"}}
 

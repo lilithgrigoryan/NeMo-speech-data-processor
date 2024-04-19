@@ -24,6 +24,7 @@ from sdp.processors.base_processor import (
     DataEntry,
 )
 
+
 class CombineSources(BaseParallelProcessor):
     """Can be used to create a single field from two alternative sources.
 
@@ -84,9 +85,12 @@ class CombineSources(BaseParallelProcessor):
 
     def process_dataset_entry(self, data_entry: Dict):
         for source_dict in self.sources:
-            if data_entry.get(source_dict['field'], self.na_indicator) != self.na_indicator:
-                data_entry[self.target] = data_entry[source_dict['field']]
-                data_entry[f"{self.target}_origin"] = source_dict['origin_label']
+            if (
+                data_entry.get(source_dict["field"], self.na_indicator)
+                != self.na_indicator
+            ):
+                data_entry[self.target] = data_entry[source_dict["field"]]
+                data_entry[f"{self.target}_origin"] = source_dict["origin_label"]
                 break  # breaking out on the first present label
         else:  # going here if no break was triggered
             data_entry[self.target] = self.na_indicator
@@ -155,7 +159,9 @@ class DuplicateFields(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry: Dict):
         for field_src, field_tgt in self.duplicate_fields.items():
             if not field_src in data_entry:
-                raise ValueError(f"Expected field {field_src} in data_entry {data_entry} but there isn't one.")
+                raise ValueError(
+                    f"Expected field {field_src} in data_entry {data_entry} but there isn't one."
+                )
 
             data_entry[field_tgt] = data_entry[field_src]
 
@@ -185,7 +191,9 @@ class RenameFields(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry: Dict):
         for field_src, field_tgt in self.rename_fields.items():
             if not field_src in data_entry:
-                raise ValueError(f"Expected field {field_src} in data_entry {data_entry} but there isn't one.")
+                raise ValueError(
+                    f"Expected field {field_src} in data_entry {data_entry} but there isn't one."
+                )
 
             data_entry[field_tgt] = data_entry[field_src]
             del data_entry[field_src]
@@ -274,7 +282,9 @@ class ChangeToRelativePath(BaseParallelProcessor):
         self.base_dir = base_dir
 
     def process_dataset_entry(self, data_entry: Dict):
-        data_entry["audio_filepath"] = os.path.relpath(data_entry["audio_filepath"], self.base_dir)
+        data_entry["audio_filepath"] = os.path.relpath(
+            data_entry["audio_filepath"], self.base_dir
+        )
 
         return [DataEntry(data=data_entry)]
 
@@ -306,7 +316,11 @@ class SortManifest(BaseProcessor):
         with open(self.input_manifest_file, "rt", encoding="utf8") as fin:
             dataset_entries = [json.loads(line) for line in fin.readlines()]
 
-        dataset_entries = sorted(dataset_entries, key=lambda x: x[self.attribute_sort_by], reverse=self.descending)
+        dataset_entries = sorted(
+            dataset_entries,
+            key=lambda x: x[self.attribute_sort_by],
+            reverse=self.descending,
+        )
 
         with open(self.output_manifest_file, "wt", encoding="utf8") as fout:
             for line in dataset_entries:
@@ -340,4 +354,6 @@ class KeepOnlySpecifiedFields(BaseProcessor):
             for line in tqdm(fin):
                 line = json.loads(line)
                 new_line = {field: line[field] for field in self.fields_to_keep}
+                # print("line", line)
+                # print("new_line", new_line)
                 fout.write(json.dumps(new_line, ensure_ascii=False) + "\n")
