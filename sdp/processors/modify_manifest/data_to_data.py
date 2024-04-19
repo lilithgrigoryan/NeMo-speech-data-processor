@@ -13,17 +13,18 @@
 # limitations under the License.
 
 import collections
+import itertools
+import json
 import os
 import re
 from typing import Dict, List
-import jiwer
-import editdistance
-import itertools
-from tqdm.contrib.concurrent import process_map
-from tqdm import tqdm
-import json
 
+import editdistance
+import jiwer
+import librosa
 import soundfile as sf
+from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from sdp.logging import logger
 from sdp.processors.base_processor import BaseParallelProcessor, DataEntry
@@ -107,13 +108,17 @@ class FfmpegConvert(BaseParallelProcessor):
         input_file = data_entry[self.input_file_key]
         if self.id_key:
             key = data_entry[self.id_key]
-            os.makedirs(os.path.join(self.resampled_audio_dir, key.split("/")[0]), exist_ok=True)
+            os.makedirs(
+                os.path.join(self.resampled_audio_dir, key.split("/")[0]), exist_ok=True
+            )
         else:
             key = os.path.splitext(input_file)[0].split("/")[-1]
         audio = os.path.join(self.resampled_audio_dir, key) + ".wav"
 
         if not os.path.isfile(audio):
-            ffmpeg_convert(input_file, audio, self.target_samplerate, self.target_nchannels)
+            ffmpeg_convert(
+                input_file, audio, self.target_samplerate, self.target_nchannels
+            )
 
         data_entry[self.output_file_key] = audio
         if self.id_key:
@@ -226,8 +231,8 @@ class CountNumWords(BaseParallelProcessor):
 
     def process_dataset_entry(self, data_entry):
         text = data_entry[self.text_key]
-        cleaned_string = self.pattern.sub('', text).strip()
-        cleaned_string = re.sub('\\s+', ' ', cleaned_string).strip()
+        cleaned_string = self.pattern.sub("", text).strip()
+        cleaned_string = re.sub("\\s+", " ", cleaned_string).strip()
         words = cleaned_string.split()
         num_words = len(words)
         data_entry[self.num_words_key] = num_words
@@ -277,7 +282,10 @@ class InsIfASRInsertion(BaseParallelProcessor):
         for insert_word in self.insert_words:
             if not insert_word in data_entry[self.pred_text_key]:
                 break
-            orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+            orig_words, pred_words = (
+                data_entry[self.text_key],
+                data_entry[self.pred_text_key],
+            )
             diff = get_diff_with_subs_grouped(orig_words, pred_words)
 
             if len(diff) > 0:  # ie if there are differences between text and pred_text
@@ -368,11 +376,16 @@ class SubIfASRSubstitution(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry) -> List:
         sub_word_counter = collections.defaultdict(int)
         data_entry[self.text_key] = add_start_end_spaces(data_entry[self.text_key])
-        data_entry[self.pred_text_key] = add_start_end_spaces(data_entry[self.pred_text_key])
+        data_entry[self.pred_text_key] = add_start_end_spaces(
+            data_entry[self.pred_text_key]
+        )
         for original_word, new_word in self.sub_words.items():
             if not original_word in data_entry[self.text_key]:
                 break
-            orig_words, pred_words = data_entry[self.text_key], data_entry[self.pred_text_key]
+            orig_words, pred_words = (
+                data_entry[self.text_key],
+                data_entry[self.pred_text_key],
+            )
             diff = get_diff_with_subs_grouped(orig_words, pred_words)
 
             if len(diff) > 0:  # ie if there are differences between text and pred_text
@@ -390,7 +403,10 @@ class SubIfASRSubstitution(BaseParallelProcessor):
                         pass
 
                     elif isinstance(diff_entry, tuple):  # substitution
-                        if diff_entry[0][1] == original_word and diff_entry[1][1] == new_word:
+                        if (
+                            diff_entry[0][1] == original_word
+                            and diff_entry[1][1] == new_word
+                        ):
                             # ie. substitution is one we want to use to change the original text
                             new_sent += new_word
                             sub_word_counter[original_word] += 1
@@ -405,7 +421,9 @@ class SubIfASRSubstitution(BaseParallelProcessor):
                 data_entry[self.text_key] = new_sent
 
         data_entry[self.text_key] = remove_extra_spaces(data_entry[self.text_key])
-        data_entry[self.pred_text_key] = remove_extra_spaces(data_entry[self.pred_text_key])
+        data_entry[self.pred_text_key] = remove_extra_spaces(
+            data_entry[self.pred_text_key]
+        )
 
         return [DataEntry(data=data_entry, metrics=sub_word_counter)]
 
@@ -526,12 +544,17 @@ class SubRegex(BaseParallelProcessor):
         for counter in metrics:
             for word, count in counter.items():
                 total_counter[word] += count
-        logger.info("Number of utterances which applied substitutions for the following patterns:")
-        total_counter_sorted = dict(sorted(total_counter.items(), key=lambda x: x[1], reverse=True))
+        logger.info(
+            "Number of utterances which applied substitutions for the following patterns:"
+        )
+        total_counter_sorted = dict(
+            sorted(total_counter.items(), key=lambda x: x[1], reverse=True)
+        )
         for word, count in total_counter_sorted.items():
             logger.info(f"{word} {count}")
         super().finalize(metrics)
-    
+
+
 class GetWER(BaseParallelProcessor):
     """
     Processor that computes the Word Error Rate (WER) between reference text and hypothesis text.
@@ -542,7 +565,7 @@ class GetWER(BaseParallelProcessor):
         reference_text_field (str): Key to get the reference text from the data.
         hypothesis_text_field (str): Key to get the hypothesis text from the data.
         output_metric_field (str): Key to put the computed WER value.
-    
+
     Returns:
         All the same fields as in the input manifest plus the output_metric_field containing
         the computed WER value.
@@ -594,7 +617,7 @@ class GetWER(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry):
         reference_text = data_entry[self.reference_text_field]
         hypothesis_text = data_entry[self.hypothesis_text_field]
-        
+
         ref_words_amount = len(reference_text.split())
         hyp_words_amount = len(hypothesis_text.split())
 
@@ -605,19 +628,36 @@ class GetWER(BaseParallelProcessor):
                 word_dist = ref_words_amount
         else:
             word_dist_measures = jiwer.compute_measures(reference_text, hypothesis_text)
-            word_dist = word_dist_measures['substitutions'] + word_dist_measures['insertions'] + word_dist_measures['deletions']
-        
+            word_dist = (
+                word_dist_measures["substitutions"]
+                + word_dist_measures["insertions"]
+                + word_dist_measures["deletions"]
+            )
+
         wer_value = word_dist / ref_words_amount
         data_entry[self.output_metric_field] = round(wer_value * 100, 2)
-        
-        return [DataEntry(data=data_entry, metrics = {'word_dist' : word_dist, 'num_words' : ref_words_amount})]
+
+        return [
+            DataEntry(
+                data=data_entry,
+                metrics={"word_dist": word_dist, "num_words": ref_words_amount},
+            )
+        ]
 
     def finalize(self, metrics: List):
-        logger.info("Total number of entries after processing: %d", self.number_of_entries)
+        logger.info(
+            "Total number of entries after processing: %d", self.number_of_entries
+        )
         if self.total_duration != 0:
-            logger.info("Total audio duration (hours) after processing: %.2f", self.total_duration / 3600)
+            logger.info(
+                "Total audio duration (hours) after processing: %.2f",
+                self.total_duration / 3600,
+            )
 
-        logger.info("Overall Word Error Rate (WER): %.2f%%", self.word_dist / self.num_words * 100)    
+        logger.info(
+            "Overall Word Error Rate (WER): %.2f%%",
+            self.word_dist / self.num_words * 100,
+        )
 
 
 class GetCER(BaseParallelProcessor):
@@ -630,7 +670,7 @@ class GetCER(BaseParallelProcessor):
         reference_text_field (str): Key to get the reference text from the data.
         hypothesis_text_field (str): Key to get the hypothesis text from the data.
         output_metric_field (str): Key to put the computed CER value.
-    
+
     Returns:
         All the same fields as in the input manifest plus the output_metric_field containing
         the computed CER value.
@@ -682,7 +722,7 @@ class GetCER(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry):
         reference_text = data_entry[self.reference_text_field]
         hypothesis_text = data_entry[self.hypothesis_text_field]
-        
+
         ref_chars_amount = len(reference_text)
         hyp_chars_amount = len(hypothesis_text)
 
@@ -693,18 +733,31 @@ class GetCER(BaseParallelProcessor):
                 char_dist = ref_chars_amount
         else:
             char_dist = editdistance.eval(reference_text, hypothesis_text)
-        
+
         cer_value = char_dist / ref_chars_amount
         data_entry[self.output_metric_field] = round(cer_value * 100, 2)
-        
-        return [DataEntry(data=data_entry, metrics = {'char_dist' : char_dist, 'num_chars' : ref_chars_amount})]
+
+        return [
+            DataEntry(
+                data=data_entry,
+                metrics={"char_dist": char_dist, "num_chars": ref_chars_amount},
+            )
+        ]
 
     def finalize(self, metrics: List):
-        logger.info("Total number of entries after processing: %d", self.number_of_entries)
+        logger.info(
+            "Total number of entries after processing: %d", self.number_of_entries
+        )
         if self.total_duration != 0:
-            logger.info("Total audio duration (hours) after processing: %.2f", self.total_duration / 3600)
+            logger.info(
+                "Total audio duration (hours) after processing: %.2f",
+                self.total_duration / 3600,
+            )
 
-        logger.info("Overall Character Error Rate (CER): %.2f%%", self.char_dist / self.num_chars * 100) 
+        logger.info(
+            "Overall Character Error Rate (CER): %.2f%%",
+            self.char_dist / self.num_chars * 100,
+        )
 
 
 class GetEdgeCER(BaseParallelProcessor):
@@ -764,7 +817,9 @@ class GetEdgeCER(BaseParallelProcessor):
                     json.dump(data_entry.data, fout, ensure_ascii=False)
                     self.number_of_entries += 1
                     self.total_duration += data_entry.data.get("duration", 0)
-                    self.edge_cer_sum += data_entry.data.get(self.output_metric_field, 0)
+                    self.edge_cer_sum += data_entry.data.get(
+                        self.output_metric_field, 0
+                    )
                     fout.write("\n")
 
         self.finalize(metrics)
@@ -777,11 +832,13 @@ class GetEdgeCER(BaseParallelProcessor):
             start_idx = -self.edge_len
             end_idx = -1
         else:
-            raise ValueError(f"Current `Edge` parameter value ({self.edge}) is incorrect. Please select `start` or `end` edge.")
-        
-        reference_text_edge = data_entry[self.reference_text_field][start_idx : end_idx]
-        hypothesis_text_edge = data_entry[self.hypothesis_text_field][start_idx : end_idx]
-        
+            raise ValueError(
+                f"Current `Edge` parameter value ({self.edge}) is incorrect. Please select `start` or `end` edge."
+            )
+
+        reference_text_edge = data_entry[self.reference_text_field][start_idx:end_idx]
+        hypothesis_text_edge = data_entry[self.hypothesis_text_field][start_idx:end_idx]
+
         ref_chars_amount = len(reference_text_edge)
         hyp_chars_amount = len(hypothesis_text_edge)
 
@@ -792,18 +849,25 @@ class GetEdgeCER(BaseParallelProcessor):
                 char_dist = ref_chars_amount
         else:
             char_dist = editdistance.eval(reference_text_edge, hypothesis_text_edge)
-        
+
         edge_cer_value = char_dist / ref_chars_amount
         data_entry[self.output_metric_field] = round(edge_cer_value * 100, 2)
-        
+
         return [DataEntry(data=data_entry)]
 
     def finalize(self, metrics: List):
-        logger.info("Total number of entries after processing: %d", self.number_of_entries)
+        logger.info(
+            "Total number of entries after processing: %d", self.number_of_entries
+        )
         if self.total_duration != 0:
-            logger.info("Total audio duration (hours) after processing: %.2f", self.total_duration / 3600)
+            logger.info(
+                "Total audio duration (hours) after processing: %.2f",
+                self.total_duration / 3600,
+            )
 
-        logger.info(f"Mean {self.edge} Character Error Rate (CER): {round(self.edge_cer_sum / self.number_of_entries, 2)}%") 
+        logger.info(
+            f"Mean {self.edge} Character Error Rate (CER): {round(self.edge_cer_sum / self.number_of_entries, 2)}%"
+        )
 
 
 class GetLenDiffRatio(BaseParallelProcessor):
@@ -856,28 +920,39 @@ class GetLenDiffRatio(BaseParallelProcessor):
                     json.dump(data_entry.data, fout, ensure_ascii=False)
                     self.number_of_entries += 1
                     self.total_duration += data_entry.data.get("duration", 0)
-                    self.words_len_diff_ratio_sum += data_entry.data.get(self.output_metric_field, 0)
+                    self.words_len_diff_ratio_sum += data_entry.data.get(
+                        self.output_metric_field, 0
+                    )
                     fout.write("\n")
 
         self.finalize(metrics)
 
-    def process_dataset_entry(self, data_entry): 
+    def process_dataset_entry(self, data_entry):
         reference_text = data_entry[self.reference_text_field]
         hypothesis_text = data_entry[self.hypothesis_text_field]
-        
+
         ref_words_amount = len(reference_text.split())
         hyp_words_amount = len(hypothesis_text.split())
 
         eps = 1e-9
-        len_diff_ratio = 1.0 * abs(ref_words_amount - hyp_words_amount) / max(ref_words_amount, eps)
+        len_diff_ratio = (
+            1.0 * abs(ref_words_amount - hyp_words_amount) / max(ref_words_amount, eps)
+        )
 
         data_entry[self.output_metric_field] = round(len_diff_ratio * 100, 2)
-        
+
         return [DataEntry(data=data_entry)]
 
     def finalize(self, metrics: List):
-        logger.info("Total number of entries after processing: %d", self.number_of_entries)
+        logger.info(
+            "Total number of entries after processing: %d", self.number_of_entries
+        )
         if self.total_duration != 0:
-            logger.info("Total audio duration (hours) after processing: %.2f", self.total_duration / 3600)
+            logger.info(
+                "Total audio duration (hours) after processing: %.2f",
+                self.total_duration / 3600,
+            )
 
-        logger.info(f"Mean Text Length Difference Ratio (in words): {round(self.words_len_diff_ratio_sum / self.number_of_entries, 2)}%")
+        logger.info(
+            f"Mean Text Length Difference Ratio (in words): {round(self.words_len_diff_ratio_sum / self.number_of_entries, 2)}%"
+        )

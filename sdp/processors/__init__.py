@@ -14,6 +14,7 @@
 
 # let's import all supported processors here to simplify target specification
 
+from sdp.processors.datasets import commoncrawl
 from sdp.processors.datasets.coraal import (
     CreateInitialManifestCORAAL,
     TrainDevTestSplitCORAAL,

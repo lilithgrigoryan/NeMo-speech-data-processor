@@ -11,4 +11,6 @@ sox
 tqdm
 wget
 jiwer
+webvtt-py # for youtube (wtt procesing in general) 
+pysrt # for youtube only
 # for some processers, additionally https://github.com/NVIDIA/NeMo is required

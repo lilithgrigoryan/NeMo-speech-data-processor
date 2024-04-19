@@ -1,11 +1,9 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, List
 
 import pandas as pd
 
-from sdp.logging import logger
 from sdp.processors.base_processor import BaseProcessor
 from sdp.utils.common import load_manifest
 

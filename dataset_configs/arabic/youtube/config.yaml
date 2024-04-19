@@ -36,3 +36,20 @@ processors:
     input_manifest_file2: ${workspace_dir}/manifest1.json
     output_manifest_file: ${workspace_dir}/manifest3.json
 
+  - _target_: sdp.processors.GetAudioDuration
+    output_manifest_file: ${workspace_dir}/manifest4.json
+    audio_file_key: sampled_audio_path
+    duration_key: sampled_audio_duration
+
+  - _target_: sdp.processors.PreserveByValue
+    output_manifest_file: ${workspace_dir}/manifest5.json
+    input_value_key: sampled_audio_duration
+    target_value: 0
+    operator: gt
+
+  - _target_: sdp.processors.datasets.commoncrawl.AllVttText 
+    output_manifest_file: ${workspace_dir}/manifest6.json
+    input_filepath_key: subtitles_path
+    output_text_key: vtt_text
+
+
