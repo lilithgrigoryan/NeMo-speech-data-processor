@@ -1,0 +1,162 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv4.yaml"
+
+processors_to_run: "0:"
+
+split: clean_train # specify dataset type (clean_train, clean_test, ...)
+dataset_dir: /home/lgrigoryan/datasets/arab/
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v4/${split}
+
+min_duration: 5 # minimal duration of the segment
+max_duration: 40.0 # maximal duration of the segment
+min_wordrate: 1.0 # minimal wordrate
+max_wordrate: 3.0 # maximal wordrate
+
+processors:
+  # 0 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateInitialManifestByExtByCsv
+    dataset_dir: ${dataset_dir}/audios
+    csv_file_path: ${dataset_dir}/subsets/${split}.csv
+    csv_primary_key: video_id
+    extension: wav
+    save_sample_ids: True
+    output_manifest_sample_id_key: sample_id
+    output_manifest_result_path_key: raw_audio_file_path
+    output_manifest_file: ${workspace_dir}/manifest0.json
+
+  # 1 resampling audios to the same sample rate
+  - _target_: sdp.processors.FfmpegConvert
+    resampled_audio_dir: ${workspace_dir}/wav
+    target_samplerate: 16000
+    target_nchannels: 1
+    input_file_key: raw_audio_file_path
+    output_file_key: audio_file_path
+    output_manifest_file: ${workspace_dir}/manifest1.json
+
+  # 2 creating manifest {sample_id, vtt_path}
+  - _target_: sdp.processors.CreateInitialManifestByExtByCsv
+    dataset_dir: ${dataset_dir}/subtitles
+    csv_file_path: ${dataset_dir}/subsets/${split}.csv
+    csv_primary_key: video_id
+    extension: ar.vtt
+    save_sample_ids: True
+    output_manifest_sample_id_key: sample_id
+    output_manifest_result_path_key: vtt_file_path
+    output_manifest_file: ${workspace_dir}/manifest2.json
+
+  # 3 merging audios manifest with vtts manifest by common key sample_id
+  - _target_: sdp.processors.MergeTwoManifestsByKey
+    key: sample_id
+    input_manifest_file2: ${workspace_dir}/manifest1.json
+    output_manifest_file: ${workspace_dir}/manifest3.json
+
+  # 4 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["sample_id", "audio_file_path", "vtt_file_path"]
+    output_manifest_file: ${workspace_dir}/manifest4.json
+
+  # 5 calculating durations
+  - _target_: sdp.processors.GetAudioDuration
+    audio_file_key: audio_file_path
+    duration_key: audio_duration
+    output_manifest_file: ${workspace_dir}/manifest5.json
+
+  # 6 removing negative durations
+  - _target_: sdp.processors.PreserveByValue
+    input_value_key: audio_duration
+    target_value: 0
+    operator: gt
+    output_manifest_file: ${workspace_dir}/manifest6.json
+
+  #TODO: remove numeration from vtts!!!!!!!!!!!
+  # 7 removing numeration from vtt files
+  - _target_: sdp.processors.FilterVttText
+    regex_params: { "pattern": '^\s*\d+\]', "repl": "" }
+    input_filepath_key: vtt_file_path
+    output_filtered_vtt_dir: ${workspace_dir}/filtered_vtt
+    output_filepath_key: filtered_vtt_file_path
+    output_manifest_file: ${workspace_dir}/manifest7.json
+
+  # 8 splitting by vtt
+  # TODO: check if splitting by vtt sentences works better
+  - _target_: sdp.processors.datasets.commoncrawl.SplitByVttSentence
+    splited_audio_dir: ${workspace_dir}/wav_sentence
+    source_audio_key: audio_file_path
+    caption_file_key: filtered_vtt_file_path
+    duration_key: audio_duration
+    duration_threshold: ${min_duration}
+    end_punctuation: ".?!\u061F\u06D4"
+    text_key: text
+    target_audio_key: audio_file_path
+    proxy_keys: [sample_id]
+    output_manifest_file: ${workspace_dir}/manifest8.json
+
+  # 9 removing samples with empty subtitles for exmaple id=2M6vs0L7Xg0
+  - _target_: sdp.processors.PreserveByValue
+    input_value_key: text
+    target_value: ""
+    operator: ne
+    output_manifest_file: ${workspace_dir}/manifest9.json
+
+  # 10 Dropping too short and too long segments
+  - _target_: sdp.processors.DropHighLowDuration
+    high_duration_threshold: ${max_duration}
+    low_duration_threshold: ${min_duration}
+    duration_key: audio_duration
+    output_manifest_file: ${workspace_dir}/manifest10.json
+
+  # 11 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["audio_file_path", "audio_duration", "text"]
+    output_manifest_file: ${workspace_dir}/manifest11.json
+
+  # 12 renaming fields accordingly
+  - _target_: sdp.processors.RenameFields
+    rename_fields:
+      { "audio_file_path": "audio_filepath", "audio_duration": "duration" }
+    output_manifest_file: ${workspace_dir}/manifest12.json
+
+  # 13 renaming fields accordingly
+  - _target_: sdp.processors.DropHighLowWordrate
+    text_key: text
+    high_wordrate_threshold: 3.
+    low_wordrate_threshold: 1.
+    output_manifest_file: ${workspace_dir}/manifest13.json
+
+  # 14 replacing punctuation marks
+  - _target_: sdp.processors.SubRegex
+    text_key: text
+    regex_params_list:
+      - { "pattern": "&lrm;", "repl": "" }
+      - { "pattern": "&rlm;", "repl": "" }
+      - { "pattern": "\\.", "repl": ' ' }
+      - { "pattern": ",", "repl": ' ' }
+      - { "pattern": "!", "repl": ' ' }
+      - { "pattern": ":", "repl": ' ' }
+      - { "pattern": ";", "repl": ' ' }
+      - { "pattern": "'", "repl": ' ' }
+      - { "pattern": "’", "repl": ' ' }
+      - { "pattern": "‘", "repl": ' ' }
+      - { "pattern": "’", "repl": ' ' }
+      - { "pattern": "‘", "repl": ' ' }
+      - { "pattern": "\"", "repl": ' '}
+      - { "pattern": "…", "repl": ' '}
+      - { "pattern": "-", "repl": ' '}
+      - { "pattern": "«", "repl": ' ' }
+      - { "pattern": "»", "repl": ' ' }
+      - { "pattern": "“", "repl": ' ' }
+      - { "pattern": "”", "repl": ' ' }
+      - { "pattern": "\u060C", "repl": ' ' }
+      - { "pattern": "\u061F", "repl": ' ' }
+      - { "pattern": "\u061B", "repl": ' ' }
+      - { "pattern": "\u061E", "repl": ' ' }
+      - { "pattern": "\u061F", "repl": ' ' }
+      - { "pattern": "\u06D4", "repl": ' ' }
+      - { "pattern": "\u060D", "repl": ' ' }
+      - {"pattern": "\\s+", "repl": " "}
+      - {"pattern": "\\[\\.\\]+", "repl": "."}
+    output_manifest_file: ${workspace_dir}/manifest14.json
+
+  # 15 dropping non alphabetical symbols
+  - _target_: sdp.processors.DropNonAlphabet
+    alphabet: "\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652\u0653\u0654\u0655\u0670 \u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\u0640\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u0649\u064A"
+    output_manifest_file: ${workspace_dir}/manifest15.json

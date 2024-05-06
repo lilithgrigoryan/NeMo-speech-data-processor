@@ -349,7 +349,11 @@ class DropNonAlphabet(BaseParallelProcessor):
     def process_dataset_entry(self, data_entry) -> List:
         drop_this_utt = False
         non_alphabet_counter = collections.defaultdict(int)
+        # print(self.alphabet)
         for char in data_entry[self.text_key]:
+            if char not in self.alphabet:
+                drop_this_utt = True
+                non_alphabet_counter[char] += 1
             if char not in self.alphabet:
                 drop_this_utt = True
                 non_alphabet_counter[char] += 1

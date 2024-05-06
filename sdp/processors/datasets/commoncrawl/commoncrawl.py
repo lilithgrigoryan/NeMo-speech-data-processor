@@ -1238,6 +1238,7 @@ class SplitByVttSentence(BaseParallelProcessor):
         caption_file_key: str,
         proxy_keys: List[str] = [],
         duration_threshold: float = 10.0,
+        end_punctuation: str = ".?",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -1249,6 +1250,7 @@ class SplitByVttSentence(BaseParallelProcessor):
         self.caption_file_key = caption_file_key
         self.duration_threshold = duration_threshold
         self.proxy_keys = proxy_keys
+        self.end_punctuation = end_punctuation
 
     def prepare(self):
         os.makedirs(self.splited_audio_dir, exist_ok=True)
@@ -1273,9 +1275,7 @@ class SplitByVttSentence(BaseParallelProcessor):
                     end_c = end_sr
                     if len(text_c) > 0 and (
                         end_c - start_c > self.duration_threshold * samplerate
-                        or text_c[-1] == "."
-                        or text_c[-1] == "?"
-                    ):
+                        or text_c[-1] in self.end_punctuation):
                         res_list.append(
                             self.makeDataEntry(
                                 data_entry,
@@ -1329,6 +1329,7 @@ class SplitByVttSentence(BaseParallelProcessor):
         }
         for proxy_key in self.proxy_keys:
             data[proxy_key] = data_entry[proxy_key]
+
         return DataEntry(data=data)
 
 

@@ -41,6 +41,8 @@ class CreateInitialManifestByExtByCsv(BaseParallelProcessor):
         output_manifest_sample_id_key: str = "sample_id",
         output_manifest_result_path_key: str = "audio_filepath",
         save_sample_ids: bool = False,
+        filter_key: str = None,
+        filter_value: str = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -54,10 +56,21 @@ class CreateInitialManifestByExtByCsv(BaseParallelProcessor):
         self.output_manifest_sample_id_key = output_manifest_sample_id_key
         self.output_manifest_result_path_key = output_manifest_result_path_key
 
-    def read_manifest(self):
-        sample_ids = pd.read_csv(self.csv_file_path)[self.csv_primary_key]
+        self.filter_key = filter_key
+        self.filter_value = filter_value
 
-        return sample_ids
+    def read_manifest(self):
+        csv = pd.read_csv(self.csv_file_path)
+        if not (self.filter_key and self.filter_value):
+            return set(csv[self.csv_primary_key])
+        else:
+            return set(
+                [
+                    row[self.csv_primary_key]
+                    for _, row in csv.iterrows()
+                    if row[self.filter_key] == self.filter_value
+                ]
+            )
 
     def process_dataset_entry(self, sample_id):
         result_path = os.path.join(self.dataset_dir, sample_id + "." + self.extension)

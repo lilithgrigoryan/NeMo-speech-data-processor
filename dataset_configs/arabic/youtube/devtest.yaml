@@ -1,0 +1,18 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="devtest.yaml"
+
+processors_to_run: "0:"
+
+split: clean_dev # specify dataset type (clean_train, clean_test, ...)
+dataset_dir: /home/lgrigoryan/datasets/arab
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/devtest/${split}
+
+processors:
+  # 0 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateDevTestManifest
+    dataset_audios_dir: ${dataset_dir}/audios
+    csv_file_path: ${dataset_dir}/subsets/${split}.csv
+    output_audio_dir: ${workspace_dir}/audios_${split}
+    output_manifest_text_key: "text"
+    output_manifest_audio_filepath_key: "audio_filepath"
+    output_manifest_audio_duration: "duration"
+    output_manifest_file: ${workspace_dir}/manifest_${split}.json

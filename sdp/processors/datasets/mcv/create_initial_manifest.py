@@ -88,7 +88,9 @@ class CreateInitialManifestMCV(BaseParallelProcessor):
         os.makedirs(self.raw_data_dir, exist_ok=True)
 
         if not self.already_extracted:
-            tar_gz_files = glob.glob(str(self.raw_data_dir) + f"/*{self.language_id}.tar.gz")
+            tar_gz_files = glob.glob(
+                str(self.raw_data_dir) + f"/*{self.language_id}.tar.gz"
+            )
             if not tar_gz_files:
                 raise RuntimeError(
                     f"Did not find any file matching {self.raw_data_dir}/*.tar.gz. "
@@ -106,17 +108,24 @@ class CreateInitialManifestMCV(BaseParallelProcessor):
         else:
             self.transcription_file = Path(self.extract_archive_dir) / self.language_id
         self.audio_path_prefix = str(self.transcription_file / "clips")
-        self.transcription_file = str(self.transcription_file / (self.data_split + ".tsv"))
+        self.transcription_file = str(
+            self.transcription_file / (self.data_split + ".tsv")
+        )
         os.makedirs(self.resampled_audio_dir, exist_ok=True)
 
     def read_manifest(self):
         if self.transcription_file is None:
-            raise RuntimeError("self.process has to be called before processing the data.")
+            raise RuntimeError(
+                "self.process has to be called before processing the data."
+            )
 
         with open(self.transcription_file, "rt", encoding="utf8") as csvfile:
             reader = csv.DictReader(csvfile, delimiter="\t")
+            print("csv filename: ", csvfile)
             next(reader, None)  # skip the headers
             dataset_entries = [(row["path"], row["sentence"]) for row in reader]
+
+        print(len(dataset_entries))
         return dataset_entries
 
     def process_dataset_entry(self, data_entry: Tuple[str, str]):

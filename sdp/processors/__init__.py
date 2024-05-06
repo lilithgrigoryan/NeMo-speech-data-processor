@@ -34,9 +34,13 @@ from sdp.processors.datasets.voxpopuli.normalize_from_non_pc_text import (
     NormalizeFromNonPCTextVoxpopuli,
 )
 from sdp.processors.datasets.youtube_vtt import CreateInitialManifestByExtByCsv
+from sdp.processors.datasets.youtube_vtt import CreateDevTestManifest
+from sdp.processors.datasets.youtube_vtt import ArabicTextPreprocessor
+from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText
 from sdp.processors.datasets.youtube_vtt.merge_two_manifests import (
     MergeTwoManifestsByKey,
 )
+from sdp.processors.datasets.youtube_vtt.validate_brackets import ValidateBrackets
 from sdp.processors.huggingface.speech_recognition import ASRTransformers, ASRWhisper
 from sdp.processors.modify_manifest.common import (
     AddConstantFields,

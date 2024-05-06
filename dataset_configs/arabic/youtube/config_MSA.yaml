@@ -1,13 +1,12 @@
-# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config.yaml"
-
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_MSA.yaml"
 processors_to_run: "0:"
 
 split: clean_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
-workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/msa
 
-min_duration: 0.1 # minimal duration of the segment
-max_duration: 40.0 # maximal duration of the segment
+min_duration: 5 # minimal duration of the segment
+max_duration: 20.0 # maximal duration of the segment
 
 processors:
   # 0 creating manifest {sample_id, audio_path}
@@ -20,8 +19,10 @@ processors:
     output_manifest_sample_id_key: sample_id
     output_manifest_result_path_key: raw_audio_file_path
     output_manifest_file: ${workspace_dir}/manifest0.json
+    filter_key: dialect
+    filter_value: MSA
 
-  # 1 resampling audios to the same sample rate
+   # 1 resampling audios to the same sample rate
   - _target_: sdp.processors.FfmpegConvert
     resampled_audio_dir: ${workspace_dir}/wav
     target_samplerate: 16000
@@ -85,23 +86,9 @@ processors:
 
   # 9 Dropping too short and too long segments
   - _target_: sdp.processors.DropHighLowDuration
-    output_manifest_file: ${workspace_dir}/manifest9.json
     high_duration_threshold: ${max_duration}
     low_duration_threshold: ${min_duration}
-
-  # # 11 Dropping too short and too long segments
-  # - _target_: sdp.processors.DropHighLowDuration
-  #   input_manifest_file: ${workspace_dir}/manifest8.json
-  #   output_manifest_file: ${workspace_dir}/manifest9H.json
-  #   low_duration_threshold: ${max_duration}
-  #   high_duration_threshold: 100.0
-
-  # # 10 Dropping too short and too long segments
-  # - _target_: sdp.processors.DropHighLowDuration
-  #   input_manifest_file: ${workspace_dir}/manifest8.json
-  #   output_manifest_file: ${workspace_dir}/manifest9L.json
-  #   high_duration_threshold: ${min_duration}
-  #   low_duration_threshold: 0.0
+    output_manifest_file: ${workspace_dir}/manifest9.json
 
   # 10 removing unnecessary fields
   - _target_: sdp.processors.KeepOnlySpecifiedFields
@@ -112,36 +99,3 @@ processors:
   - _target_: sdp.processors.RenameFields
     rename_fields: { "orig_text": "text" }
     output_manifest_file: ${workspace_dir}/manifest11.json
-
-  # 12 dropping non alphabetical symbols
-  - _target_: sdp.processors.DropNonAlphabet
-    alphabet: "[]()\"-0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM.,: ؆؇؈؉؊؋،؍؎؏ؘؙؐؑؒؓؔؕؖؗ؛d؞؟ؠءآأؤإئابةتثجحخدذرزسشصضطظعغػؼؽؾؿـفقكلمنهوىيًٌٍَُِّْٓٔ٠١٢٣٤٥٦٧٨٩٪٫٬٭ٮٯٰٱٲٳٴٵٶٷٸٹٺٻټٽپٿڀځڂڃڄڅچڇڈډڊڋڌڍڎڏڐڑڒړڔڕږڗژڙښڛڜڝڞڟڠڡڢڣڤڥڦڧڨکڪګڬڭڮگڰڱڲڳڴڵڶڷڸڹںڻڼڽھڿۀہۂۃۄۅۆۇۈۉۊۋیۍێۏېۑےۓ۔ەۖۗۘۙۚۛۜ\u06dd۞ۣ۟۠ۡۢۤۥۦۧۨ۩۪ۭ۫۬ۮۯ۰۱۲۳۴۵۶۷۸۹ۺۻۼ۽۾ۿ"
-    output_manifest_file: ${workspace_dir}/manifest12.json
-    # test_cases:
-    #   - {input: {text: "test тест 测试"}, output: null}
-    #   - {input: {text: "test"}, output: {text: "test"}}
-
-  # 13 validating brackets
-  - _target_: sdp.processors.ValidateBrackets
-    input_manifest_text_key: "text"
-    output_manifest_file: ${workspace_dir}/manifest13.json
-    test_cases:
-      - {input: {text: "test тест [sdfsdfsd]"}, output: {text: "test тест [sdfsdfsd]", is_valid: True}}
-      - {input: {text: "test [{()}][{[]}]"}, output: {text: "test [{()}][{[]}]", is_valid: True}}
-      - {input: {text: "[[[[ test [ тест]]]]]"}, output: {text: "[[[[ test [ тест]]]]]", is_valid: True}}
-      - {input: {text: "test тест ]sdfsdfsd[]"}, output: {text: "test тест ]sdfsdfsd[]", is_valid: False}}
-      - {input: {text: "1] test [{()}[]]{[]}]"}, output: {text: "1] test [{()}[]]{[]}]", is_valid: False}}
-      - {input: {text: "test тест ]"}, output: {text: "test тест ]", is_valid: False}}
-      - {input: {text: "test ] тест ]"}, output: {text: "test ] тест ]", is_valid: False}}
-      - {input: {text: "test [ тест"}, output: {text: "test [ тест", is_valid: False}}
-      - {input: {text: "]test  тест["}, output: {text: "]test  тест[", is_valid: False}}
-      - {input: {text: "[امتحان]"}, output: {text: "[امتحان]", is_valid: True}}
-
-  # 13 validating brackets
-  - _target_: sdp.processors.PreserveByValue
-    input_value_key: is_valid
-    target_value: True
-    operator: eq
-    output_manifest_file: ${workspace_dir}/manifest14.json
-
-
