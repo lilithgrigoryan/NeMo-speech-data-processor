@@ -27,18 +27,18 @@ documentation: |
   * **text (str)**: transcription (lower-case without punctuation).
   * **duration (float)**: audio duration in seconds.
 processors_to_run: all
-workspace_dir: ???
-data_split: dev
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/fleurs
+data_split: train
 final_manifest: ${workspace_dir}/test_data_reference.json
 
 processors:
   # creating manifest for armenian test set
   - _target_: sdp.processors.CreateInitialManifestFleurs
-    lang: "hy_am"
+    lang: "ar_eg"
     split: ${data_split}
     raw_data_dir: ${workspace_dir}/raw_data
 
   - _target_: sdp.processors.GetAudioDuration
-    audio_filepath_field: audio_filepath
-    duration_field: duration
+    audio_filepath_key: audio_filepath
+    duration_key: duration
     output_manifest_file: ${final_manifest}
