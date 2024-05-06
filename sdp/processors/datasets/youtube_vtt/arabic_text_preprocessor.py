@@ -106,7 +106,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
             # text = araby.normalize_alef(text)
             text = araby.normalize_ligature(text)
             # text = araby.normalize_teh(text)
-            text = araby.reduce_tashkeel(text)
+            # text = araby.reduce_tashkeel(text)
             # text = araby.strip_diacritics(text)
 
         text = self._remove_extra_spaces(text)

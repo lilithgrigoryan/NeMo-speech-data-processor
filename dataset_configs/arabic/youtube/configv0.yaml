@@ -1,9 +1,9 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0.yaml"
 
-processors_to_run: "0:"
+processors_to_run: "13:"
 
-split: clean_dev # specify dataset type (clean_train, clean_test, ...)
+split: clean_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v0/${split}
 
@@ -116,52 +116,59 @@ processors:
     rename_fields: { "orig_text": "text" }
     output_manifest_file: ${workspace_dir}/manifest13.json
 
-  # 14 replacing punctuation marks
+  # 14 normalizing arabic numbers
+  - _target_: sdp.processors.NormalizeNumbers
+    input_text_key: "text"
+    output_text_key: "text"
+    output_manifest_file: ${workspace_dir}/manifest14.json
+
+  # 15 replacing punctuation marks
   - _target_: sdp.processors.SubRegex
     text_key: text
     regex_params_list:
       - { "pattern": "&lrm;", "repl": "" }
       - { "pattern": "&rlm;", "repl": "" }
-      - { "pattern": "'", "repl": '' }
-      - { "pattern": "’", "repl": '' }
-      - { "pattern": "‘", "repl": '' }
-      - { "pattern": "’", "repl": '' }
-      - { "pattern": "‘", "repl": '' }
-      - { "pattern": "٬", "repl": '' }
-      - { "pattern": "\"", "repl": ''}
-      - { "pattern": "…", "repl": ' '}
-      - { "pattern": "«", "repl": ' ' }
-      - { "pattern": "»", "repl": ' ' }
-      - { "pattern": "“", "repl": ' ' }
-      - { "pattern": "”", "repl": ' ' }
-      - { "pattern": "☭", "repl": '' }
-      - {"pattern": "\\s+", "repl": " "}
-      - {"pattern": "\\[\\.\\]+", "repl": "."}
-      - { "pattern": "\u0670", "repl": '' } # removing small alif
+      - { "pattern": "'", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "٬", "repl": "" }
+      - { "pattern": '"', "repl": "" }
+      - { "pattern": "…", "repl": " " }
+      - { "pattern": "«", "repl": " " }
+      - { "pattern": "»", "repl": " " }
+      - { "pattern": "“", "repl": " " }
+      - { "pattern": "”", "repl": " " }
+      - { "pattern": "☭", "repl": "" }
+      - { "pattern": "•", "repl": "" }
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\[\\.\\]+", "repl": "." }
+      - { "pattern": "\u0670", "repl": "" } # removing small alif
       - { "pattern": "\u06CC", "repl": "\u064A" } # replacing arabic letter farsi yeh with yeh
       - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
-    output_manifest_file: ${workspace_dir}/manifest14.json
+    output_manifest_file: ${workspace_dir}/manifest15.json
 
-  # 15 removing punctuation, diacritics, dotted letters and tatweel
+  # 16 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: True
+    remove_diacritics: False
     remove_punctuation: True
     normalize_dots: False
     remove_tatweel: True
     pyarabic_normalize: True
-    output_manifest_file: ${workspace_dir}/manifest15.json
+    output_manifest_file: ${workspace_dir}/manifest16.json
 
-  # 16 removing high low wordrate samples
+  # 17 removing high low wordrate samples
   - _target_: sdp.processors.DropHighLowWordrate
     text_key: text
     high_wordrate_threshold: ${max_wordrate}
     low_wordrate_threshold: ${min_wordrate}
-    output_manifest_file: ${workspace_dir}/manifest16.json
-  
-  # 17 dropping non alphabetical symbols
+    output_manifest_file: ${workspace_dir}/manifest17.json
+
+  # 18 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     # alphabet: " \u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\u0640\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u0649\u064A"
     # alphabet: " \u0627\u0628\u062A\u062B\u062C\u062D\u062E\u062F\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u064A \u0621"
-    output_manifest_file: ${workspace_dir}/manifest17.json
+    output_manifest_file: ${workspace_dir}/manifest18.json

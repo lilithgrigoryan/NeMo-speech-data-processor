@@ -33,9 +33,12 @@ from sdp.processors.datasets.voxpopuli.create_initial_manifest import (
 from sdp.processors.datasets.voxpopuli.normalize_from_non_pc_text import (
     NormalizeFromNonPCTextVoxpopuli,
 )
-from sdp.processors.datasets.youtube_vtt import CreateInitialManifestByExtByCsv
-from sdp.processors.datasets.youtube_vtt import CreateDevTestManifest
-from sdp.processors.datasets.youtube_vtt import ArabicTextPreprocessor
+from sdp.processors.datasets.youtube_vtt import (
+    ArabicTextPreprocessor,
+    CreateDevTestManifest,
+    CreateInitialManifestByExtByCsv,
+    NormalizeNumbers,
+)
 from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText
 from sdp.processors.datasets.youtube_vtt.merge_two_manifests import (
     MergeTwoManifestsByKey,
