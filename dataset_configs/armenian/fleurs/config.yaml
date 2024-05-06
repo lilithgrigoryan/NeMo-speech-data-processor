@@ -28,8 +28,8 @@ documentation: |
   * **duration (float)**: audio duration in seconds.
 processors_to_run: all
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/fleurs
-data_split: train
-final_manifest: ${workspace_dir}/test_data_reference.json
+data_split: dev
+final_manifest: ${workspace_dir}/${data_split}_reference.json
 
 processors:
   # creating manifest for armenian test set
