@@ -1,9 +1,9 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0.yaml"
 
-processors_to_run: "13:"
+processors_to_run: "0:"
 
-split: clean_train # specify dataset type (clean_train, clean_test, ...)
+split: clean_dev # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v0/${split}
 
@@ -81,7 +81,7 @@ processors:
   # TODO: check if splitting by vtt sentences works better
   - _target_: sdp.processors.datasets.commoncrawl.SplitByVtt
     source_audio_key: audio_file_path
-    caption_file_key: vtt_file_path
+    caption_file_key: filtered_vtt_file_path
     output_text_key: splitted_vtt_text
     output_manifest_file: ${workspace_dir}/manifest8.json
 
@@ -157,6 +157,7 @@ processors:
     normalize_dots: False
     remove_tatweel: True
     pyarabic_normalize: True
+    reduce_diacritics: True
     output_manifest_file: ${workspace_dir}/manifest16.json
 
   # 17 removing high low wordrate samples

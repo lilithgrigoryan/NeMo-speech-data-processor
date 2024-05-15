@@ -1,0 +1,92 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_wer.yaml"
+processors_to_run: "0:"
+
+dataset_dir: workdir/wer/datasets
+workspace_dir: workdir/wer/results
+# model: /home/lgrigoryan/models/diacr_normalized_masc_mcv_fleurs/arabic-asr-diacr-normalized-masc-mvc-fleurs--ngc-bs16xg8xn1xga8--32-averaged.nemo
+# model: /home/lgrigoryan/models/no_diacr_normalized_masc_mcv_fleurs/arabic-asr-no-diacr-normalized--ngc-bs16xg8xn1xga8--32.nemo
+# model: /home/lgrigoryan/models/diacr_masc_mcv_from_validated_other/arabic-asr-diacr-mcv_from_validated_other-masc--ngc-bc16xg8xn1xga8--32.nemo
+# model: /home/lgrigoryan/models/diacr_normalized_mcv_fleur/arabic-asr-diacr-normalized-mcv-fleurs--ngc-bs16xg8xn1xga8--32.nemo
+# model: /home/lgrigoryan/models/diacr_normalized_masc/arabic-asr-diacr-normalized-masc--ngc-bs16xg8xn1xga8--32.nemo
+model: /home/lgrigoryan/prog/rive-tutorials/workdir/content/models/speechtotext_ar_ar_conformer_vtrainable_v3.0/Conformer-CTC-L_spe128_ar-AR_3.0.nemo
+model_name: riva_v3
+
+dataset_name: fleurs_dev
+
+processors:
+  # ASR inference
+  - _target_: sdp.processors.ASRInferenceParallel
+    # batch_size: 1
+    # devices: 1
+    pretrained_model: ${model}
+    input_manifest_file: ${dataset_dir}/${dataset_name}/manifest.json
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_orig.json
+
+  # 2 canonically decomposing then composing reference text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: text
+    output_text_key: text
+    apply_canonical_decomposition_canonical_composition: True
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_temp.json
+
+  # 3 canonically decomposing then composing predicted text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: pred_text
+    output_text_key: pred_text
+    apply_canonical_decomposition_canonical_composition: True
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}.json
+
+  # 4 removing diacritics from source text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: text
+    output_text_key: text
+    remove_diacritics: True
+    apply_canonical_decomposition_canonical_composition: True
+    input_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_orig.json
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_temp.json
+
+  # 5 removing diacritics from predicted text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: pred_text
+    output_text_key: pred_text
+    remove_diacritics: True
+    apply_canonical_decomposition_canonical_composition: True
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_rm_diacr.json
+
+  # 6 normalizing source text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: text
+    output_text_key: text
+    normalize: True
+    apply_canonical_decomposition_canonical_composition: True
+    input_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_orig.json
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_temp.json
+
+  # 7 normalizing predicted text
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: pred_text
+    output_text_key: pred_text
+    normalize: True
+    apply_canonical_decomposition_canonical_composition: True
+    output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_normalize.json
+
+  # # # 6 calculating wer between source text and predicted
+  # # - _target_: sdp.processors.GetWER
+  # #   reference_text_field: text
+  # #   hypothesis_text_field: pred_text
+  # #   output_metric_field: wer
+  # #   output_manifest_file: ${workspace_dir}/${dataset_name}/manifest5.json
+
+  # # 7 calculating wer between source text and predicted after removing diacritic marks
+  # - _target_: sdp.processors.GetWER
+  #   reference_text_field: text_rm_diacr
+  #   hypothesis_text_field: pred_text_rm_diacr
+  #   output_metric_field: wer_rm_diacr
+  #   output_manifest_file: ${workspace_dir}/${dataset_name}/manifest6.json
+
+  # # 8 calculating wer between source text and predicted after normalization (removing diacritics, mormalizing all forms of aled, teh marbuta...)
+  # - _target_: sdp.processors.GetWER
+  #   reference_text_field: text_normalized
+  #   hypothesis_text_field: pred_text_normalized
+  #   output_metric_field: wer_normalized
+  #   output_manifest_file: ${workspace_dir}/${dataset_name}/manifest_wer.json
