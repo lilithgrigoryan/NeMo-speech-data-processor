@@ -21,6 +21,9 @@ from sdp.processors.datasets.coraal import (
 )
 from sdp.processors.datasets.lhotse import LhotseImport
 from sdp.processors.datasets.mcv.create_initial_manifest import CreateInitialManifestMCV
+from sdp.processors.datasets.mediaspeech.create_initial_manifest import (
+    CreateInitialManifestMediaSpeech,
+)
 from sdp.processors.datasets.mls.create_initial_manifest import CreateInitialManifestMLS
 from sdp.processors.datasets.mls.restore_pc import RestorePCForMLS
 from sdp.processors.datasets.slr83.create_initial_manifest import (
@@ -44,6 +47,9 @@ from sdp.processors.datasets.youtube_vtt.merge_two_manifests import (
     MergeTwoManifestsByKey,
 )
 from sdp.processors.datasets.youtube_vtt.validate_brackets import ValidateBrackets
+from sdp.processors.huggingface.create_initial_manifest import (
+    CreateInitialManifestHuggingFace,
+)
 from sdp.processors.huggingface.speech_recognition import ASRTransformers, ASRWhisper
 from sdp.processors.modify_manifest.common import (
     AddConstantFields,

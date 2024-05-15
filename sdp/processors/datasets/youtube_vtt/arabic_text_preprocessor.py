@@ -1,5 +1,5 @@
 import re
-from pathlib import Path
+import unicodedata
 
 from pyarabic import araby
 
@@ -10,23 +10,35 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
     def __init__(
         self,
         input_text_key: str = "text",
+        output_text_key: str = "text",
         remove_diacritics: bool = False,
         remove_punctuation: bool = False,
         normalize_dots: bool = False,
         remove_tatweel: bool = False,
         pyarabic_normalize: bool = False,
+        reduce_diacritics: bool = False,
+        normalize: bool = False,
+        apply_canonical_decomposition: bool = False,
+        apply_canonical_decomposition_canonical_composition: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.input_text_key = input_text_key
+        self.output_text_key = output_text_key
         self.remove_diacritics = remove_diacritics
         self.remove_punctuation = remove_punctuation
         self.normalize_dots = normalize_dots
         self.remove_tatweel = remove_tatweel
         self.pyarabic_normalize = pyarabic_normalize
+        self.reduce_diacritics = reduce_diacritics
+        self.normalize = normalize
+        self.apply_canonical_decomposition = apply_canonical_decomposition
+        self.apply_canonical_decomposition_canonical_composition = (
+            apply_canonical_decomposition_canonical_composition
+        )
 
     def process_dataset_entry(self, data_entry):
-        data_entry[self.input_text_key] = self.clean_data(
+        data_entry[self.output_text_key] = self.clean_data(
             data_entry[self.input_text_key]
         )
         return [DataEntry(data=data_entry)]
@@ -80,6 +92,15 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         normalized_text = text.translate(str.maketrans(letters_map))
         return normalized_text
 
+    def _normalize(self, text):
+        text = araby.strip_diacritics(text)
+        text = araby.normalize_alef(text)
+        text = araby.normalize_ligature(text)
+        text = araby.normalize_teh(text)
+        text = araby.reduce_tashkeel(text)
+
+        return text
+
     def clean_data(self, text):
         if self.remove_diacritics:
             text = self._remove_diacritics(text)
@@ -108,6 +129,14 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
             # text = araby.normalize_teh(text)
             # text = araby.reduce_tashkeel(text)
             # text = araby.strip_diacritics(text)
+        if self.normalize:
+            text = self._normalize(text)
+        if self.reduce_diacritics:
+            text = araby.reduce_tashkeel(text)
+        if self.apply_canonical_decomposition:
+            text = unicodedata.normalize("NFD", text)
+        if self.apply_canonical_decomposition_canonical_composition:
+            text = unicodedata.normalize("NFC", text)
 
         text = self._remove_extra_spaces(text)
         text = self._remove_empty_lines(text)

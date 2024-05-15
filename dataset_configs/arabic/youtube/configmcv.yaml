@@ -3,10 +3,9 @@
 
 processors_to_run: "0:"
 
-split: train_from_validated # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab_mcv
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/mcv/${data_split}
-data_split: test
+data_split: train_from_validated
 
 processors:
   # 0 creating manifest {sample_id, audio_path}
@@ -57,11 +56,12 @@ processors:
   # 3 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: False
+    remove_diacritics: True
     remove_punctuation: True
     normalize_dots: False
     remove_tatweel: True
     pyarabic_normalize: True
+    reduce_diacritics: False
     output_manifest_file: ${workspace_dir}/manifest3.json
 
   # 4 dropping non alphabetical symbols
