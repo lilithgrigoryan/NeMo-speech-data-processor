@@ -40,6 +40,7 @@ from sdp.processors.datasets.youtube_vtt import (
     ArabicTextPreprocessor,
     CreateDevTestManifest,
     CreateInitialManifestByExtByCsv,
+    KeepCommon,
     NormalizeNumbers,
 )
 from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText

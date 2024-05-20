@@ -48,7 +48,9 @@ class ASRWhisper(BaseProcessor):
         except:
             raise ImportError("Need to install whisper: pip install -U openai-whisper")
 
-        logger.warning("This is an example processor, for demonstration only. Do not use it for production purposes.")
+        logger.warning(
+            "This is an example processor, for demonstration only. Do not use it for production purposes."
+        )
         self.whisper = whisper
         self.pretrained_model = pretrained_model
         self.output_text_key = output_text_key
@@ -66,13 +68,13 @@ class ASRWhisper(BaseProcessor):
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
 
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             for item in tqdm(json_list):
                 pred_text, pred_lang = self.whisper_infer(item["audio_filepath"])
 
                 item[self.output_text_key] = pred_text
                 item[self.output_lang_key] = pred_lang
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     def whisper_infer(self, audio_path):
         audio = self.whisper.load_audio(audio_path)
@@ -119,9 +121,13 @@ class ASRTransformers(BaseProcessor):
             import torch
             from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
         except:
-            raise ImportError("Need to install transformers: pip install accelerate transformers")
+            raise ImportError(
+                "Need to install transformers: pip install accelerate transformers"
+            )
 
-        logger.warning("This is an example processor, for demonstration only. Do not use it for production purposes.")
+        logger.warning(
+            "This is an example processor, for demonstration only. Do not use it for production purposes."
+        )
         self.pretrained_model = pretrained_model
         self.input_audio_key = input_audio_key
         self.output_text_key = output_text_key
@@ -142,8 +148,12 @@ class ASRTransformers(BaseProcessor):
                 self.device = "cpu"
 
         self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            self.pretrained_model, torch_dtype=self.torch_dtype, low_cpu_mem_usage=True, use_safetensors=True
+            self.pretrained_model,
+            torch_dtype=self.torch_dtype,
+            low_cpu_mem_usage=True,
+            use_safetensors=True,
         )
+        self.model.generation_config.language = "ar"
         self.model.to(self.device)
 
         processor = AutoProcessor.from_pretrained(self.pretrained_model)
@@ -162,11 +172,13 @@ class ASRTransformers(BaseProcessor):
 
     def process(self):
         json_list = load_manifest(Path(self.input_manifest_file))
-        json_list_sorted = sorted(json_list, key=lambda d: d[self.input_duration_key], reverse=True)
+        json_list_sorted = sorted(
+            json_list, key=lambda d: d[self.input_duration_key], reverse=True
+        )
 
         Path(self.output_manifest_file).parent.mkdir(exist_ok=True, parents=True)
 
-        with Path(self.output_manifest_file).open('w') as f:
+        with Path(self.output_manifest_file).open("w") as f:
             start_index = 0
             for _ in tqdm(range(len(json_list_sorted) // self.batch_size)):
                 batch = json_list_sorted[start_index : start_index + self.batch_size]
@@ -176,4 +188,4 @@ class ASRTransformers(BaseProcessor):
 
                 for i, item in enumerate(batch):
                     item[self.output_text_key] = results[i]["text"]
-                    f.write(json.dumps(item, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")

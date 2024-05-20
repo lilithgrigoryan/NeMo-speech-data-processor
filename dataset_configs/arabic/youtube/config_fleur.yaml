@@ -41,11 +41,28 @@ processors:
       - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
     output_manifest_file: ${workspace_dir}/manifest2.json
 
+
+  # _2 replacing english punctuation marks with arabic ones
+  - _target_: sdp.processors.SubRegex
+    text_key: text
+    regex_params_list:
+      - { "pattern": ",", "repl": "،" }
+      - { "pattern": "-", "repl": " " }
+      - { "pattern": "؛", "repl": " " }
+      - { "pattern": ";", "repl": " " }
+      - { "pattern": " ،", "repl": "،" }
+      - { "pattern": " \\.", "repl": "\\." }
+      - { "pattern": " ؟", "repl": "؟" }
+      - { "pattern": " :", "repl": ":" }
+      - { "pattern": " !", "repl": "!" }
+      - { "pattern": "\\s+", "repl": " "}
+    output_manifest_file: ${workspace_dir}/manifest_2.json
+
   # 3 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
     remove_diacritics: True
-    remove_punctuation: True
+    remove_punctuation: False
     normalize_dots: False
     remove_tatweel: True
     pyarabic_normalize: True
@@ -54,7 +71,6 @@ processors:
 
   # 4 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
-    # alphabet: " \u0621\u0622\u0623\u0624\u0625\u0626\u0627\u0628\u0629\u062A\u062B\u062C\u062D\u062E\u062F\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\u0640\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u0649\u064A"
-    # alphabet: " \u0627\u0628\u062A\u062B\u062C\u062D\u062E\u062F\u0630\u0631\u0632\u0633\u0634\u0635\u0636\u0637\u0638\u0639\u063A\u0641\u0642\u0643\u0644\u0645\u0646\u0647\u0648\u064A \u0621"
-    alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    # alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    alphabet: ":،.! ؟  \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     output_manifest_file: ${workspace_dir}/manifest4.json

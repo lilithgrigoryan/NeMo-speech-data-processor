@@ -1,16 +1,18 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
-# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0.yaml"
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0_filter.yaml"
 
-processors_to_run: "0:"
+processors_to_run: "21:"
 
-split: clean_train # specify dataset type (clean_train, clean_test, ...)
+split: noisy_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
-workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v0/${split}
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/filtered_train_masc/${split}
 
 min_duration: 1 # minimal duration of the segment
 max_duration: 20.0 # maximal duration of the segment
 min_wordrate: 0.8 # minimal wordrate
 max_wordrate: 3.0 # maximal wordrate
+
+model_path: /home/lgrigoryan/models/no_diacr_normalized_masc_mcv_fleurs/arabic-asr-no-diacr-normalized--ngc-bs16xg8xn1xga8--32.nemo
 
 processors:
   # 0 creating manifest {sample_id, audio_path}
@@ -94,7 +96,7 @@ processors:
 
   # 10 removing unnecessary fields
   - _target_: sdp.processors.KeepOnlySpecifiedFields
-    fields_to_keep: ["audio_filepath", "duration", "orig_text"]
+    fields_to_keep: ["segment_id", "audio_filepath", "duration", "orig_text"]
     output_manifest_file: ${workspace_dir}/manifest10.json
 
   # 11 removing samples with empty subtitles for exmaple id=2M6vs0L7Xg0
@@ -122,12 +124,20 @@ processors:
     output_text_key: "text"
     output_manifest_file: ${workspace_dir}/manifest14.json
 
-  # 15 replacing punctuation marks
+  # 15 removing high low wordrate samples
+  - _target_: sdp.processors.DropHighLowWordrate
+    text_key: text
+    high_wordrate_threshold: ${max_wordrate}
+    low_wordrate_threshold: ${min_wordrate}
+    output_manifest_file: ${workspace_dir}/manifest15.json
+
+  # 16 replacing punctuation marks
   - _target_: sdp.processors.SubRegex
     text_key: text
     regex_params_list:
       - { "pattern": "&lrm;", "repl": "" }
       - { "pattern": "&rlm;", "repl": "" }
+      - { "pattern": "&nbsp", "repl": " " }
       - { "pattern": "'", "repl": "" }
       - { "pattern": "’", "repl": "" }
       - { "pattern": "‘", "repl": "" }
@@ -144,12 +154,18 @@ processors:
       - { "pattern": "•", "repl": "" }
       - { "pattern": "\\s+", "repl": " " }
       - { "pattern": "\\[\\.\\]+", "repl": "." }
+      - { "pattern": "\\.{2,}", "repl": "." }
+      - { "pattern": "!{2,}", "repl": "!" }
+      - { "pattern": "؟{2,}", "repl": "؟" }
       - { "pattern": "\u0670", "repl": "" } # removing small alif
       - { "pattern": "\u06CC", "repl": "\u064A" } # replacing arabic letter farsi yeh with yeh
       - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
-    output_manifest_file: ${workspace_dir}/manifest15.json
+    output_manifest_file: ${workspace_dir}/manifest16.json
+    test_cases:
+      - {input: {text: "..."}, output: {text: "."}}
+      - {input: {text: "test..."}, output: {text: "test."}}
 
-  # 16 replacing english punctuation marks with arabic ones
+  # 17 replacing english punctuation marks with arabic ones
   - _target_: sdp.processors.SubRegex
     text_key: text
     regex_params_list:
@@ -158,14 +174,63 @@ processors:
       - { "pattern": "؛", "repl": " " }
       - { "pattern": ";", "repl": " " }
       - { "pattern": " ،", "repl": "،" }
-      - { "pattern": " \\.", "repl": "\\." }
+      - { "pattern": " \\.", "repl": "." }
       - { "pattern": " ؟", "repl": "؟" }
       - { "pattern": " :", "repl": ":" }
       - { "pattern": " !", "repl": "!" }
-      - { "pattern": "\\s+", "repl": " "}
-    output_manifest_file: ${workspace_dir}/manifest_15.json
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\.{2,}", "repl": "." }
+      - { "pattern": "!{2,}", "repl": "!" }
+      - { "pattern": "؟{2,}", "repl": "؟" }
+    output_manifest_file: ${workspace_dir}/manifest17.json
+    test_cases:
+      - {input: {text: "..."}, output: {text: "."}}
+      - {input: {text: "test..."}, output: {text: "test."}}
 
-  # 16 removing punctuation, diacritics, dotted letters and tatweel
+  # 18 removing punctuation, diacritics, dotted letters and tatweel
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: text
+    remove_diacritics: True
+    remove_punctuation: True
+    normalize_dots: False
+    remove_tatweel: True
+    pyarabic_normalize: True
+    reduce_diacritics: False
+    apply_compatability_decomposition: False
+    output_manifest_file: ${workspace_dir}/manifest18.json
+
+  # 19 dropping non alphabetical symbols
+  - _target_: sdp.processors.DropNonAlphabet
+    alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    # alphabet: ":،.!؟  \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    output_manifest_file: ${workspace_dir}/manifest_final.json
+
+  # 20 asr inference on train data
+  - _target_: sdp.processors.ASRInferenceParallel
+    output_manifest_file: ${workspace_dir}/manifest_inference.json
+    pretrained_model: ${model_path}
+    batch_size: 16
+
+  # 21
+  - _target_: sdp.processors.DropHighWER
+    output_manifest_file: ${workspace_dir}/manifest19.json
+    text_key: text
+    pred_text_key: pred_text
+    wer_threshold: 60
+
+  # 22
+  - _target_: sdp.processors.DropHighCER
+    output_manifest_file: ${workspace_dir}/manifest20.json
+    text_key: text
+    pred_text_key: pred_text
+    cer_threshold: 30
+
+  # 23 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["audio_filepath"]
+    output_manifest_file: ${workspace_dir}/manifest21.json
+
+  # 24 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
     remove_diacritics: True
@@ -174,17 +239,18 @@ processors:
     remove_tatweel: True
     pyarabic_normalize: True
     reduce_diacritics: False
-    output_manifest_file: ${workspace_dir}/manifest16.json
+    input_manifest_file: ${workspace_dir}/manifest17.json
+    output_manifest_file: ${workspace_dir}/manifest22.json
 
-  # 17 removing high low wordrate samples
-  - _target_: sdp.processors.DropHighLowWordrate
-    text_key: text
-    high_wordrate_threshold: ${max_wordrate}
-    low_wordrate_threshold: ${min_wordrate}
-    output_manifest_file: ${workspace_dir}/manifest17.json
-
-  # 18 dropping non alphabetical symbols
+  # 25 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     # alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     alphabet: ":،.!؟  \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
-    output_manifest_file: ${workspace_dir}/manifest18.json
+    output_manifest_file: ${workspace_dir}/manifest23.json
+
+  # 26 keeping only low WER and CER smaples from input noisy dataset
+  - _target_: sdp.processors.KeepCommon
+    input_manifest_key1: audio_filepath
+    input_manifest_key2: audio_filepath
+    input_manifest_file2: ${workspace_dir}/manifest21.json
+    output_manifest_file: ${workspace_dir}/manifest24.json

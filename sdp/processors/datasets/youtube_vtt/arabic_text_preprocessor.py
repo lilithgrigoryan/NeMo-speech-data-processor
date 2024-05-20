@@ -20,6 +20,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         normalize: bool = False,
         apply_canonical_decomposition: bool = False,
         apply_canonical_decomposition_canonical_composition: bool = False,
+        apply_compatability_decomposition: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -36,6 +37,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         self.apply_canonical_decomposition_canonical_composition = (
             apply_canonical_decomposition_canonical_composition
         )
+        self.apply_compatability_decomposition = apply_compatability_decomposition
 
     def process_dataset_entry(self, data_entry):
         data_entry[self.output_text_key] = self.clean_data(
@@ -137,6 +139,8 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
             text = unicodedata.normalize("NFD", text)
         if self.apply_canonical_decomposition_canonical_composition:
             text = unicodedata.normalize("NFC", text)
+        if self.apply_compatability_decomposition:
+            text = unicodedata.normalize("NFKC", text)
 
         text = self._remove_extra_spaces(text)
         text = self._remove_empty_lines(text)
