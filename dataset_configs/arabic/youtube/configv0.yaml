@@ -3,7 +3,7 @@
 
 processors_to_run: "0:"
 
-split: clean_train # specify dataset type (clean_train, clean_test, ...)
+split: clean_dev # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v0/${split}
 

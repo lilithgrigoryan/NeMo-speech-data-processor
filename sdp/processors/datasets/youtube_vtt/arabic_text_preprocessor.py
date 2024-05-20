@@ -79,6 +79,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         super().__init__(**kwargs)
         self.input_text_key = input_text_key
         self.output_text_key = output_text_key
+        self.output_text_key = output_text_key
         self.remove_diacritics = remove_diacritics
         self.remove_punctuation = remove_punctuation
         self.normalize_dots = normalize_dots
@@ -146,6 +147,15 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         )
         normalized_text = text.translate(str.maketrans(letters_map))
         return normalized_text
+
+    def _normalize(self, text):
+        text = araby.strip_diacritics(text)
+        text = araby.normalize_alef(text)
+        text = araby.normalize_ligature(text)
+        text = araby.normalize_teh(text)
+        text = araby.reduce_tashkeel(text)
+
+        return text
 
     def _normalize(self, text):
         text = araby.strip_diacritics(text)
