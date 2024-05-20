@@ -18,5 +18,5 @@ from .create_manifest_csv import CreateInitialManifestByExtByCsv
 from .filter_vtt_entries import FilterVttText
 from .keep_common import KeepCommon
 from .merge_two_manifests import MergeTwoManifestsByKey
-from .normalize import NormalizeNumbers
+from .normalize_text import NormalizeText
 from .validate_brackets import ValidateBrackets

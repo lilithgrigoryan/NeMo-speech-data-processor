@@ -41,7 +41,6 @@ from sdp.processors.datasets.youtube_vtt import (
     CreateDevTestManifest,
     CreateInitialManifestByExtByCsv,
     KeepCommon,
-    NormalizeNumbers,
 )
 from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText
 from sdp.processors.datasets.youtube_vtt.merge_two_manifests import (
@@ -72,6 +71,7 @@ from sdp.processors.modify_manifest.data_to_data import (
     GetLenDiffRatio,
     GetWER,
     InsIfASRInsertion,
+    NormalizeText,
     ReadTxtLines,
     SplitLineBySentence,
     SubIfASRSubstitution,

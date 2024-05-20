@@ -21,8 +21,8 @@ from typing import Dict, List
 
 import editdistance
 import jiwer
-import librosa
 import soundfile as sf
+from nemo_text_processing.text_normalization.normalize import Normalizer
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
@@ -855,7 +855,7 @@ class GetEdgeCER(BaseParallelProcessor):
 
         return [DataEntry(data=data_entry)]
 
-    def finalize(self, metrics: List):
+    def finalize(self):
         logger.info(
             "Total number of entries after processing: %d", self.number_of_entries
         )
@@ -956,3 +956,51 @@ class GetLenDiffRatio(BaseParallelProcessor):
         logger.info(
             f"Mean Text Length Difference Ratio (in words): {round(self.words_len_diff_ratio_sum / self.number_of_entries, 2)}%"
         )
+
+
+class NormalizeText(BaseParallelProcessor):
+    """This processor applies text normalization (TN) to the text. I.e. converts text from written form into its verbalized form.
+    E.g., “$123” is converted to “one hundred and twenty-three dollars.”
+
+    Args:
+        input_text_field (str): the text field that will be the input to the Normalizer.
+        input_language (str): language specifying the text normalization rules in ISO 639 Set 1 format. E.g., "en", "es", "it", etc.
+        input_case: (str): input text capitalization, set to `cased` if text contains capital letters.
+            This flag affects normalization rules applied to the text. Note, `lower_cased` won't lower case input.
+        output_text_field (str): the text field that will be the output from the Normalizer.
+
+    Returns:
+        This processor normalizes the text in the `input_text_field` key and saves the normalized text in `output_text_field` key.
+
+    Raises:
+        `NotImplementedError`: when TN is not implemented for the requaested language.
+    """
+
+    def __init__(
+        self,
+        input_text_field: str,
+        input_language: str,
+        input_case: str,
+        output_text_field: str,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.input_text_key = input_text_field
+        self.output_text_key = output_text_field
+        self.input_case = input_case
+        self.input_language = input_language
+
+    def prepare(self):
+        try:
+            self.normalizer = Normalizer(
+                input_case=self.input_case, lang=self.input_language
+            )
+        except NotImplementedError as e:
+            logger.error("Failed to run text normalization: %s", repr(e))
+
+    def process_dataset_entry(self, data_entry):
+        data_entry[self.output_text_key] = self.normalizer.normalize(
+            data_entry[self.input_text_key]
+        )
+
+        return [DataEntry(data=data_entry)]

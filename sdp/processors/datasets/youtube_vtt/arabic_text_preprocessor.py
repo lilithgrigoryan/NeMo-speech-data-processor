@@ -5,6 +5,59 @@ from pyarabic import araby
 
 from sdp.processors.base_processor import BaseParallelProcessor, DataEntry
 
+# arabic letters
+HAMZA = "\u0621"
+ALEF_MADDA = "\u0622"
+ALEF_HAMZA_ABOVE = "\u0623"
+WAW_HAMZA = "\u0624"
+ALEF_HAMZA_BELOW = "\u0625"
+YEH_HAMZA_ABOVE = "\u0626"
+ALEF = "\u0627"
+BEH = "\u0628"
+TEH_MARBUTA = "\u0629"
+TEH = "\u062A"
+THEH = "\u062B"
+JEEM = "\u062C"
+HAH = "\u062D"
+KHAH = "\u062E"
+DAL = "\u062F"
+THAL = "\u0630"
+REH = "\u0631"
+ZAIN = "\u0632"
+SEEN = "\u0633"
+SHEEN = "\u0634"
+SAD = "\u0635"
+DAD = "\u0636"
+TAH = "\u0637"
+ZAH = "\u0638"
+AIN = "\u0639"
+GHAIN = "\u063A"
+FEH = "\u0641"
+QAF = "\u0642"
+KAF = "\u0643"
+LAM = "\u0644"
+MEEM = "\u0645"
+NOON = "\u0646"
+HEH = "\u0647"
+WAW = "\u0648"
+ALEF_MAKSURA = "\u0649"
+YEH = "\u064A"
+
+# harakats (diacritics)
+FATHAT = "\u064E"
+KASRAH = "\u0650"
+DAMMAH = "\u064F"
+SUKUN = "\u0652"
+SHADDAH = "\u0651"
+KASRATAN = "\u064D"
+DAMMATAN = "\u064C"
+FATHATAN = "\u064B"
+
+# punctuation marks
+QUESTION_MARK = "\u061F"
+SAMICOLON = "\u061B"
+COMMA = "\u060C"
+
 
 class ArabicTextPreprocessor(BaseParallelProcessor):
     def __init__(
