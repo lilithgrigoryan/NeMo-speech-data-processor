@@ -37,9 +37,11 @@ from sdp.processors.datasets.voxpopuli.normalize_from_non_pc_text import (
     NormalizeFromNonPCTextVoxpopuli,
 )
 from sdp.processors.datasets.youtube_vtt import (
+    ApplyLlama3,
     ArabicTextPreprocessor,
     CreateDevTestManifest,
     CreateInitialManifestByExtByCsv,
+    CreateInitialManifestFromAljazeera,
     KeepCommon,
 )
 from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText

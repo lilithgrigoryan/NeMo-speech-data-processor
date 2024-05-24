@@ -1,7 +1,7 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0_filter.yaml"
 
-processors_to_run: "21:"
+processors_to_run: "0:"
 
 split: noisy_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
@@ -119,10 +119,12 @@ processors:
     output_manifest_file: ${workspace_dir}/manifest13.json
 
   # 14 normalizing arabic numbers
-  - _target_: sdp.processors.NormalizeNumbers
-    input_text_key: "text"
-    output_text_key: "text"
-    output_manifest_file: ${workspace_dir}/manifest14.json
+  - _target_: sdp.processors.NormalizeText
+    input_text_field: "text"
+    input_language: "ar"
+    input_case: "cased"
+    output_text_field: "text"
+    output_manifest_file: ${workspace_dir}/manifest16.json
 
   # 15 removing high low wordrate samples
   - _target_: sdp.processors.DropHighLowWordrate
@@ -170,22 +172,34 @@ processors:
     text_key: text
     regex_params_list:
       - { "pattern": ",", "repl": "،" }
-      - { "pattern": "-", "repl": " " }
+      - { "pattern": "\\?", "repl": "؟" }
+      - { "pattern": "\\-", "repl": " " }
       - { "pattern": "؛", "repl": " " }
       - { "pattern": ";", "repl": " " }
-      - { "pattern": " ،", "repl": "،" }
-      - { "pattern": " \\.", "repl": "." }
-      - { "pattern": " ؟", "repl": "؟" }
-      - { "pattern": " :", "repl": ":" }
-      - { "pattern": " !", "repl": "!" }
+      - { "pattern": ":", "repl": " " }
+      - { "pattern": "!", "repl": "." }
+
+      - { "pattern": "\\s+\\.", "repl": "." }
+      - { "pattern": "\\s+؟", "repl": "؟" }
+      - { "pattern": "\\s+:", "repl": ":" }
+      - { "pattern": "\\s+،", "repl": "،" }
+      # - { "pattern": "\\s+!", "repl": "!" }
       - { "pattern": "\\s+", "repl": " " }
-      - { "pattern": "\\.{2,}", "repl": "." }
-      - { "pattern": "!{2,}", "repl": "!" }
-      - { "pattern": "؟{2,}", "repl": "؟" }
+
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\.+", "repl": "." }
+      - { "pattern": "،+", "repl": "،" }
+      # - { "pattern": "!+", "repl": "!" }
+      - { "pattern": "؟+", "repl": "؟" }
+      - { "pattern": "،+", "repl": "،" }
     output_manifest_file: ${workspace_dir}/manifest17.json
     test_cases:
-      - {input: {text: "..."}, output: {text: "."}}
-      - {input: {text: "test..."}, output: {text: "test."}}
+      - { input: { text: "..." }, output: { text: "." } }
+      - { input: { text: "test..." }, output: { text: "test." } }
+      - { input: { text: "test. . ." }, output: { text: "test." } }
+      - { input: { text: "test. . . ؟؟؟" }, output: { text: "test.؟" } }
+      - { input: { text: "test-test" }, output: { text: "test test" } }
+      - { input: { text: "test ." }, output: { text: "test." } }
 
   # 18 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor

@@ -3,21 +3,23 @@ processors_to_run: "0:"
 
 dataset_dir: workdir/wer/datasets
 workspace_dir: workdir/wer/results
-# model: /home/lgrigoryan/models/diacr_normalized_masc_mcv_fleurs/arabic-asr-diacr-normalized-masc-mvc-fleurs--ngc-bs16xg8xn1xga8--32-averaged.nemo
+model: /home/lgrigoryan/models/diacr_normalized_masc_mcv_fleurs/arabic-asr-diacr-normalized-masc-mvc-fleurs--ngc-bs16xg8xn1xga8--32-averaged.nemo
 # model: /home/lgrigoryan/models/no_diacr_normalized_masc_mcv_fleurs/arabic-asr-no-diacr-normalized--ngc-bs16xg8xn1xga8--32.nemo
 # model: /home/lgrigoryan/models/diacr_masc_mcv_from_validated_other/arabic-asr-diacr-mcv_from_validated_other-masc--ngc-bc16xg8xn1xga8--32.nemo
 # model: /home/lgrigoryan/models/diacr_normalized_mcv_fleur/arabic-asr-diacr-normalized-mcv-fleurs--ngc-bs16xg8xn1xga8--32.nemo
 # model: /home/lgrigoryan/models/diacr_normalized_masc/arabic-asr-diacr-normalized-masc--ngc-bs16xg8xn1xga8--32.nemo
-model: /home/lgrigoryan/prog/rive-tutorials/workdir/content/models/speechtotext_ar_ar_conformer_vtrainable_v3.0/Conformer-CTC-L_spe128_ar-AR_3.0.nemo
-model_name: riva_v3
+# model: /home/lgrigoryan/prog/rive-tutorials/workdir/content/models/speechtotext_ar_ar_conformer_vtrainable_v3.0/Conformer-CTC-L_spe128_ar-AR_3.0.nemo
+# model: /home/lgrigoryan/models/no_diacr_masc_mcv_fleurs_masc_noisy/arabic-asr-no-diacr-mac-mcv-fleurs-masc-noisy--ngc-bs16xg8xn1xga8--32-averaged.nemo
+# model: /home/lgrigoryan/Downloads/Conformer-CTC-L_spe128_ar-AR_2.0.nemo
+model_name: nemo_norm_masc_mcv_fleurs/
 
-dataset_name: fleurs_dev
+dataset_name: mcv_dev
 
 processors:
   # ASR inference
   - _target_: sdp.processors.ASRInferenceParallel
     # batch_size: 1
-    # devices: 1
+    devices: 1
     pretrained_model: ${model}
     input_manifest_file: ${dataset_dir}/${dataset_name}/manifest.json
     output_manifest_file: ${workspace_dir}/${model_name}/${dataset_name}/manifest_${dataset_name}_orig.json

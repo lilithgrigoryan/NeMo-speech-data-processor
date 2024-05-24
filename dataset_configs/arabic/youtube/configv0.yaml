@@ -1,9 +1,9 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0.yaml"
 
-processors_to_run: "0:"
+processors_to_run: "16:"
 
-split: clean_dev # specify dataset type (clean_train, clean_test, ...)
+split: clean_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/v0/${split}
 
@@ -117,9 +117,11 @@ processors:
     output_manifest_file: ${workspace_dir}/manifest13.json
 
   # 14 normalizing arabic numbers
-  - _target_: sdp.processors.NormalizeNumbers
-    input_text_key: "text"
-    output_text_key: "text"
+  - _target_: sdp.processors.NormalizeText
+    input_text_field: "text"
+    input_language: "ar"
+    input_case: "cased"
+    output_text_field: "text"
     output_manifest_file: ${workspace_dir}/manifest14.json
 
   # 15 replacing punctuation marks
@@ -168,7 +170,7 @@ processors:
   # 16 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: True
+    remove_diacritics: False
     remove_punctuation: False
     normalize_dots: False
     remove_tatweel: True

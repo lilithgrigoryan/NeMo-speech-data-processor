@@ -27,20 +27,23 @@ class FilterVttText(BaseParallelProcessor):
         os.makedirs(self.output_filtered_vtt_dir, exist_ok=True)
 
     def process_dataset_entry(self, data_entry):
-        vtt = webvtt.read(data_entry[self.input_filepath_key])
+        try:
+            vtt = webvtt.read(data_entry[self.input_filepath_key])
 
-        for caption in vtt:
-            caption.text = re.sub(
-                pattern=self.regex_params["pattern"],
-                repl=self.regex_params["repl"],
-                string=caption.text,
-                count=self.regex_params.get("count", 0),
-            )
+            for caption in vtt:
+                caption.text = re.sub(
+                    pattern=self.regex_params["pattern"],
+                    repl=self.regex_params["repl"],
+                    string=caption.text,
+                    count=self.regex_params.get("count", 0),
+                )
 
-        basename = os.path.basename(data_entry[self.input_filepath_key])
-        filtered_vtt_filepath = os.path.join(self.output_filtered_vtt_dir, basename)
+            basename = os.path.basename(data_entry[self.input_filepath_key])
+            filtered_vtt_filepath = os.path.join(self.output_filtered_vtt_dir, basename)
 
-        vtt.save(filtered_vtt_filepath)
-        data_entry[self.output_filepath_key] = filtered_vtt_filepath
+            vtt.save(filtered_vtt_filepath)
+            data_entry[self.output_filepath_key] = filtered_vtt_filepath
 
-        return [DataEntry(data=data_entry)]
+            return [DataEntry(data=data_entry)]
+        except:
+            return [DataEntry(data=None)]

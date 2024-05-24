@@ -3,7 +3,7 @@
 
 processors_to_run: "0:"
 
-data_split: other
+data_split: test
 dataset_dir: /home/lgrigoryan/datasets/arab_mcv
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/mcv/${data_split}
 
@@ -21,9 +21,11 @@ processors:
     output_manifest_file: ${workspace_dir}/manifest0.json
 
   # 1 normalizing arabic numbers
-  - _target_: sdp.processors.NormalizeNumbers
-    input_text_key: "text"
-    output_text_key: "text"
+  - _target_: sdp.processors.NormalizeText
+    input_text_field: "text"
+    input_language: "ar"
+    input_case: "cased"
+    output_text_field: "text"
     output_manifest_file: ${workspace_dir}/manifest1.json
 
   # 2 replacing punctuation marks
@@ -32,24 +34,25 @@ processors:
     regex_params_list:
       - { "pattern": "&lrm;", "repl": "" }
       - { "pattern": "&rlm;", "repl": "" }
-      - { "pattern": "'", "repl": '' }
-      - { "pattern": "’", "repl": '' }
-      - { "pattern": "‘", "repl": '' }
-      - { "pattern": "’", "repl": '' }
-      - { "pattern": "‘", "repl": '' }
-      - { "pattern": "٬", "repl": '' }
-      - { "pattern": "\"", "repl": ''}
-      - { "pattern": "…", "repl": ' '}
-      - { "pattern": "«", "repl": ' ' }
-      - { "pattern": "»", "repl": ' ' }
-      - { "pattern": "“", "repl": ' ' }
-      - { "pattern": "”", "repl": ' ' }
-      - { "pattern": "☭", "repl": '' }
-      - {"pattern": "\\s+", "repl": " "}
-      - {"pattern": "\\[\\.\\]+", "repl": "."}
-      - { "pattern": "\u0670", "repl": '' } # removing small alif
+      - { "pattern": "'", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "٬", "repl": "" }
+      - { "pattern": '"', "repl": "" }
+      - { "pattern": "…", "repl": " " }
+      - { "pattern": "«", "repl": " " }
+      - { "pattern": "»", "repl": " " }
+      - { "pattern": "“", "repl": " " }
+      - { "pattern": "”", "repl": " " }
+      - { "pattern": "☭", "repl": "" }
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\[\\.\\]+", "repl": "." }
+      - { "pattern": "\u0670", "repl": "" } # removing small alif
       - { "pattern": "\u06CC", "repl": "\u064A" } # replacing arabic letter farsi yeh with yeh
       - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
+      # - { "pattern": "^\\.(?=[^\\.]*$)(.*)", "repl": "\\1." }
     output_manifest_file: ${workspace_dir}/manifest2.json
 
   # 3 replacing english punctuation marks with arabic ones
@@ -57,16 +60,42 @@ processors:
     text_key: text
     regex_params_list:
       - { "pattern": ",", "repl": "،" }
+      - { "pattern": "\\?", "repl": "؟" }
       - { "pattern": "-", "repl": " " }
       - { "pattern": "؛", "repl": " " }
       - { "pattern": ";", "repl": " " }
-      - { "pattern": " ،", "repl": "،" }
-      - { "pattern": " \\.", "repl": "\\." }
-      - { "pattern": " ؟", "repl": "؟" }
-      - { "pattern": " :", "repl": ":" }
-      - { "pattern": " !", "repl": "!" }
-      - { "pattern": "\\s+", "repl": " "}
-    output_manifest_file: ${workspace_dir}/manifest_2.json
+      - { "pattern": ":", "repl": " " }
+      - { "pattern": "!", "repl": "." }
+
+      - { "pattern": "\\s+\\.", "repl": "." }
+      - { "pattern": "\\s+؟", "repl": "؟" }
+      - { "pattern": "\\s+:", "repl": ":" }
+      - { "pattern": "\\s+،", "repl": "،" }
+      # - { "pattern": "\\s+!", "repl": "!" }
+      - { "pattern": "\\s+", "repl": " " }
+
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\.+", "repl": "." }
+      - { "pattern": "،+", "repl": "،" }
+      # - { "pattern": "!+", "repl": "!" }
+      - { "pattern": "؟+", "repl": "؟" }
+      - { "pattern": "،+", "repl": "،" }
+
+      - { "pattern": "^\\s*!(?![^!]*[\\؟;])\\s$", "repl": "\\1." }
+      # - { "pattern": "^\\s*\\.(.+)\\s$", "repl": "\\1." }
+      - { "pattern": "^\\s*\\.(?![^\\.؟]*[\\.؟])(.+)\\s+$", "repl": "\\1." }
+      - { "pattern": "^\\s*؟(.+)\\s$", "repl": "\\1؟" }
+    output_manifest_file: ${workspace_dir}/manifest3.json
+    test_cases:
+      - { input: { text: "..." }, output: { text: "." } }
+      - { input: { text: "test..." }, output: { text: "test." } }
+      - { input: { text: "test. . ." }, output: { text: "test." } }
+      - { input: { text: "test. . . ؟؟؟" }, output: { text: "test.؟" } }
+      - { input: { text: " !test" }, output: { text: "test." } }
+      - { input: { text: " .test" }, output: { text: "test." } }
+      - { input: { text: " .test sdfsdf." }, output: { text: ".test sdfsdf." } }
+      - { input: { text: " .test؟" }, output: { text: ".test؟" } }
+      - { input: { text: " ..test" }, output: { text: "test." } }
 
   # 4 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
@@ -77,10 +106,10 @@ processors:
     remove_tatweel: True
     pyarabic_normalize: True
     reduce_diacritics: False
-    output_manifest_file: ${workspace_dir}/manifest3.json
+    output_manifest_file: ${workspace_dir}/manifest4.json
 
   # 5 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     # alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     alphabet: ":،.! ؟  \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
-    output_manifest_file: ${workspace_dir}/manifest4.json
+    output_manifest_file: ${workspace_dir}/manifest5.json

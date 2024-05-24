@@ -1,0 +1,3 @@
+pyarabic
+bs4
+datasets

@@ -1,0 +1,104 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_pc.yaml"
+
+processors_to_run: "4:5"
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/pc
+data_split: dev
+dataset_dir: /home/lgrigoryan/datasets/arab_mcv
+
+processors:
+  # 0 creating manifest from aljazeera
+  - _target_: sdp.processors.CreateInitialManifestFromAljazeera
+    output_manifest_file: ${workspace_dir}/manifest_aljazeera.json
+
+  # 1 dropping non arabic texts
+  - _target_: sdp.processors.DropNonAlphabet
+    alphabet: "1235467890\"()-\\[\\] \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    output_manifest_file: ${workspace_dir}/manifest1.json
+
+  # 2 removing samples with empty subtitles
+  - _target_: sdp.processors.PreserveByValue
+    input_value_key: text
+    target_value: ""
+    operator: ne
+    output_manifest_file: ${workspace_dir}/manifest2.json
+
+  # 3 removing samples with empty subtitles
+  - _target_: sdp.processors.PreserveByValue
+    input_value_key: text
+    target_value: " "
+    operator: ne
+    output_manifest_file: ${workspace_dir}/manifest3.json
+
+  - _target_: sdp.processors.DuplicateFields
+    output_manifest_file: ${workspace_dir}/manifest_3.json
+    duplicate_fields: {"text":"pred_text"}
+
+  # 4 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateInitialManifestMCV
+    raw_data_dir: ${dataset_dir}
+    extract_archive_dir: ${dataset_dir}
+    resampled_audio_dir: ${workspace_dir}/clips_resampled
+    data_split: ${data_split}
+    language_id: ar
+    already_extracted: True
+    target_samplerate: 16000
+    target_nchannels: 1
+    inut_manifest_file: ${workspace_dir}/manifest3.json
+    output_manifest_file: ${workspace_dir}/manifest4.json
+
+  # 5 renaming fields accordingly
+  - _target_: sdp.processors.RenameFields
+    rename_fields: { "text": "text_pc" }
+    output_manifest_file: ${workspace_dir}/manifest5.json
+
+  # 6 removing punctuation, diacritics, dotted letters and tatweel
+  - _target_: sdp.processors.ArabicTextPreprocessor
+    input_text_key: text_pc
+    output_text_key: text
+    remove_diacritics: False
+    remove_punctuation: True
+    normalize_dots: False
+    remove_tatweel: False
+    pyarabic_normalize: False
+    reduce_diacritics: False
+    output_manifest_file: ${workspace_dir}/manifest6.json
+
+  # 7 appling llama3
+  - _target_: sdp.processors.ApplyLlama3
+    input_manifest_file: ${workspace_dir}/manifest3.json
+    input_example_manifest: ${workspace_dir}/manifest6.json
+    pretrained_model: "meta-llama/Meta-Llama-3-8B-Instruct"
+    input_text_key: "text"
+    message: "Add missing punctuation marks \". : ؟ ،\". Don't change the words of the text. Keep the text as it is."
+    torch_dtype: "float16"
+    output_text_key: "text_pred_pc"
+    output_manifest_file: ${workspace_dir}/manifest7.json
+
+  # 8 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["text_pc", "text_pred_pc"]
+    output_manifest_file: ${workspace_dir}/manifest8.json
+
+  # 9 renaming fields accordingly
+  - _target_: sdp.processors.RenameFields
+    rename_fields: { "text_pc": "text", "text_pred_pc": "pred_text" }
+    output_manifest_file: ${workspace_dir}/manifest9.json
+
+  # 10 applying pucntuaatuin capitalization model
+  - _target_: sdp.processors.PCInference
+    input_text_field: text
+    output_text_field: "pred_text"
+    batch_size: 16
+    model_path: /home/lgrigoryan/Downloads/bert-base_ar-AR_Riva-PnC-SET-1.1.nemo
+    input_manifest_file: ${workspace_dir}/manifest3.json
+    output_manifest_file: ${workspace_dir}/manifest10.json
+
+  # 11 removing unnecessary fields
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["text_pc", "pred_text"]
+    output_manifest_file: ${workspace_dir}/manifest11.json
+
+  # 12 renaming fields accordingly
+  - _target_: sdp.processors.RenameFields
+    rename_fields: { "text_pc": "text" }
+    output_manifest_file: ${workspace_dir}/manifest12.json
