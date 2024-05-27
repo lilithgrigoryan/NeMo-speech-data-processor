@@ -52,10 +52,10 @@ DAMMATAN = "\u064C"
 FATHATAN = "\u064B"
 
 # Ligatures
-LAM_ALEF = u'\ufefb'
-LAM_ALEF_HAMZA_ABOVE = u'\ufef7'
-LAM_ALEF_HAMZA_BELOW = u'\ufef9'
-LAM_ALEF_MADDA_ABOVE = u'\ufef5'
+LAM_ALEF = u'\uFEFB'
+LAM_ALEF_HAMZA_ABOVE = u'\uFEF7'
+LAM_ALEF_HAMZA_BELOW = u'\uFEF9'
+LAM_ALEF_MADDA_ABOVE = u'\uFEF5'
 LIGATURES=(LAM_ALEF, LAM_ALEF_HAMZA_ABOVE, LAM_ALEF_HAMZA_BELOW, LAM_ALEF_MADDA_ABOVE)
 
 # Punctuation marks
@@ -93,7 +93,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
                                                     Useful for replacing Arabic letters positional forms with general unicode. Defaults to False.
         normalize (bool): normalizes the input text. Normalization includes:    removing diacritical marks,
                                                                                 normalization of letter `ALEF`-- `ALEF_HAMZA_BELOW`, `ALEF_HAMZA_ABOVE`, `ALEF_MADDA_ABOVE` will be replaced by `ALEF`,
-                                                                                normalization of ligatures: `LAM_ALEF`, `LAM_ALEF_HAMZA_ABOVE`, `LAM_ALEF_HAMZA_BELOW`, `LAM_ALEF_MADDA_ABOVE` ligatures will be replaces by two letters correspondingly.
+                                                                                normalization of ligatures: `LAM_ALEF`, `LAM_ALEF_HAMZA_ABOVE`, `LAM_ALEF_HAMZA_BELOW`, `LAM_ALEF_MADDA_ABOVE` ligatures will be replaces by two letters `LAM` and `ALEF`.
                                                                                 letter `TEH_MARBUTA` will be replaced by `HEH` 
     """
     def __init__(
@@ -133,7 +133,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         )
         return [DataEntry(data=data_entry)]
 
-    def _remove_diacritics(text):
+    def _remove_diacritics(self, text):
         for char in DIACRITICS:
             text = text.replace(char, '')
         return text
@@ -152,7 +152,8 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         return LIGUATURES_PATTERN.sub(u'%s%s' % (LAM, ALEF), text)
     
     def _normalize_alef(self, text):
-        return re.sub(ALEFS, ALEF, text)
+        ALEFS_PATTERN = re.compile(u"[" + u"".join(ALEFS) + u"]", re.UNICODE)
+        return re.sub(ALEFS_PATTERN, ALEF, text)
 
     def _remove_extra_spaces(self, text):
         text = re.sub(" +", " ", text)
@@ -160,7 +161,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
 
     def _remove_empty_lines(self, text):
         lines = text.split("\n")
-        return ("\n").join([line for line in lines if len(line) > 1])
+        return ("\n").join([line for line in lines if len(line) >= 1])
 
     def _normalize(self, text):
         text = self._remove_diacritics(text)
