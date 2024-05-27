@@ -1,10 +1,10 @@
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_whisper.yaml"
-processors_to_run: "1:"
+processors_to_run: "8:"
 
 split: train # specify dataset type (clean_train, clean_test, ...)
 model_name: whisper-v3
-dataset_name: quran_dev
-dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/datasets/${dataset_name}
+dataset_name: fleurs_test
+dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/datasets_pc/${dataset_name}
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/whisper/${dataset_name}
 results_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/results/${model_name}
 
@@ -13,7 +13,7 @@ processors:
   - _target_: sdp.processors.ASRTransformers #pip install accelerate transformers
     pretrained_model: "openai/whisper-large-v3" #"openai/whisper-large-v3"
     batch_size: 16
-    device: cuda:0
+    device: cuda:1
     output_text_key: pred_text
     input_manifest_file: ${dataset_dir}/manifest_absolute.json
     output_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
@@ -21,7 +21,7 @@ processors:
   # 1 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     text_key: pred_text 
-    alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
+    alphabet: "؟.، \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     input_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
     output_manifest_file: ${workspace_dir}/manifest_predictions_processed_${dataset_name}.json
 
@@ -72,3 +72,9 @@ processors:
     normalize: True
     apply_canonical_decomposition_canonical_composition: True
     output_manifest_file: ${results_dir}/${dataset_name}/manifest_${dataset_name}_normalize.json
+
+  # 8 keep
+  - _target_: sdp.processors.KeepOnlySpecifiedFields
+    fields_to_keep: ["text", "audio_filepath", "duration"]
+    input_manifest_file: ${workspace_dir}/manifest_predictions_processed_${dataset_name}.json
+    output_manifest_file: ${workspace_dir}/manifest_${dataset_name}_whisper_filtered.json

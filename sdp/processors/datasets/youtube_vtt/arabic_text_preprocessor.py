@@ -1,11 +1,9 @@
 import re
 import unicodedata
 
-from pyarabic import araby
-
 from sdp.processors.base_processor import BaseParallelProcessor, DataEntry
 
-# arabic letters
+# Arabic letters
 HAMZA = "\u0621"
 ALEF_MADDA = "\u0622"
 ALEF_HAMZA_ABOVE = "\u0623"
@@ -43,7 +41,7 @@ WAW = "\u0648"
 ALEF_MAKSURA = "\u0649"
 YEH = "\u064A"
 
-# harakats (diacritics)
+# Harakats (diacritics)
 FATHAT = "\u064E"
 KASRAH = "\u0650"
 DAMMAH = "\u064F"
@@ -53,45 +51,81 @@ KASRATAN = "\u064D"
 DAMMATAN = "\u064C"
 FATHATAN = "\u064B"
 
-# punctuation marks
+# Ligatures
+LAM_ALEF = u'\ufefb'
+LAM_ALEF_HAMZA_ABOVE = u'\ufef7'
+LAM_ALEF_HAMZA_BELOW = u'\ufef9'
+LAM_ALEF_MADDA_ABOVE = u'\ufef5'
+LIGATURES=(LAM_ALEF, LAM_ALEF_HAMZA_ABOVE, LAM_ALEF_HAMZA_BELOW, LAM_ALEF_MADDA_ABOVE)
+
+# Punctuation marks
 QUESTION_MARK = "\u061F"
 SAMICOLON = "\u061B"
 COMMA = "\u060C"
 
+DIACRITICS = [chr(x) for x in range(0x0600, 0x06ff) if unicodedata.category(chr(x)) == "Mn"]
+PUNCTUATION_MARKS = ["?", "!", ":", ";", "-", ".", ",", "؟","،", "؛"]
+ALEFS = (ALEF, ALEF_MADDA, ALEF_HAMZA_ABOVE, ALEF_HAMZA_BELOW)
 
 class ArabicTextPreprocessor(BaseParallelProcessor):
+    """Class for Arabic text preprocessing.
+
+    Operates on the text in the ``input_text_key``, and saves output text in
+    the ``output_text_key``.
+    
+    Args:
+        input_text_key (str):       the text field that will be the input to the processor.
+        output_text_key (str):      the text field that will contain processed text.
+        remove_extra_spaces (bool): replaces consequent spaces by one. Defaults to True.
+        remove_empty_lines (bool):  joins multiline input into single-line text. Defaults to True.
+        remove_diacritics (bool):   removes Arabic diacritical marks from the input text. Defaults to False.
+        remove_punctuation (bool):  removes punctuation marks from the input text. Defaults to False.
+                                    Processed punctuation marks are: Question mark, Exclamation mark, Colon,Semicolon,
+                                                                    Hypen-Minus, Full stop, Comma, Arabic Question Mark,
+                                                                    Arabic Comma, Arabic Semicolon.
+        remove_tatweel (bool):      removes tatweel justification sign from the text. Defaults to False.
+        apply_canonical_decomposition (bool):   applies canonical decomposition to the input text. This will decompose composit letters such as Alef with Hamza Above,
+                                                Alef with Hamza Below into two separate symbols. This will provide unique ordering for combining marks. Default to False.
+        apply_canonical_decomposition_canonical_composition (bool): applies canonical decomposition and then composition to the input text. This will provide unique ordering for combining marks.
+                                                                    Useful when handling Arabic letters with multiple diacritics, to ensure unique ordering of the diacritical marks. 
+                                                                    Default to False.
+        apply_compatability_decomposition (bool):   applies applies compatability decomposition followed by canonical composition.
+                                                    Useful for replacing Arabic letters positional forms with general unicode. Defaults to False.
+        normalize (bool): normalizes the input text. Normalization includes:    removing diacritical marks,
+                                                                                normalization of letter `ALEF`-- `ALEF_HAMZA_BELOW`, `ALEF_HAMZA_ABOVE`, `ALEF_MADDA_ABOVE` will be replaced by `ALEF`,
+                                                                                normalization of ligatures: `LAM_ALEF`, `LAM_ALEF_HAMZA_ABOVE`, `LAM_ALEF_HAMZA_BELOW`, `LAM_ALEF_MADDA_ABOVE` ligatures will be replaces by two letters correspondingly.
+                                                                                letter `TEH_MARBUTA` will be replaced by `HEH` 
+    """
     def __init__(
         self,
         input_text_key: str = "text",
         output_text_key: str = "text",
+        remove_extra_spaces: bool = True,
+        remove_empty_lines: bool = True,
         remove_diacritics: bool = False,
         remove_punctuation: bool = False,
-        normalize_dots: bool = False,
         remove_tatweel: bool = False,
-        pyarabic_normalize: bool = False,
-        reduce_diacritics: bool = False,
-        normalize: bool = False,
         apply_canonical_decomposition: bool = False,
         apply_canonical_decomposition_canonical_composition: bool = False,
-        apply_compatability_decomposition: bool = False,
+        apply_compatability_decomposition_canonical_composition: bool = False,
+        normalize: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.input_text_key = input_text_key
         self.output_text_key = output_text_key
         self.output_text_key = output_text_key
+        self.remove_extra_spaces = remove_extra_spaces
+        self.remove_empty_lines = remove_empty_lines
         self.remove_diacritics = remove_diacritics
         self.remove_punctuation = remove_punctuation
-        self.normalize_dots = normalize_dots
         self.remove_tatweel = remove_tatweel
-        self.pyarabic_normalize = pyarabic_normalize
-        self.reduce_diacritics = reduce_diacritics
         self.normalize = normalize
         self.apply_canonical_decomposition = apply_canonical_decomposition
         self.apply_canonical_decomposition_canonical_composition = (
             apply_canonical_decomposition_canonical_composition
         )
-        self.apply_compatability_decomposition = apply_compatability_decomposition
+        self.apply_compatability_decomposition_canonical_composition = apply_compatability_decomposition_canonical_composition
 
     def process_dataset_entry(self, data_entry):
         data_entry[self.output_text_key] = self.clean_data(
@@ -99,21 +133,26 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         )
         return [DataEntry(data=data_entry)]
 
-    # remove diacritics (https://www.quora.com/What-are-the-diacritics-punctuation-marks-in-Arabic-and-how-can-I-learn-them-all)
-    # sukun: \u0652 fatha: \u064E
-    # damma: \u064F kasra: \u0650
-    # fathatan: \u064B  kasratan: \u064D
-    # dammatan: \u064C
-    # maddah: \u0653    shadda: \u0651
-    def _remove_diacritics(self, text):
-        text = re.sub(
-            r"['\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652\u0653']", "", text
-        )
+    def _remove_diacritics(text):
+        for char in DIACRITICS:
+            text = text.replace(char, '')
         return text
 
     def _remove_punctuation(self, text):
-        text = re.sub(r"['?!:;\-.,؟،؛\u06D4]", "", text)
+        for char in PUNCTUATION_MARKS:
+            text = text.replace(char, '')
         return text
+
+    def _normalize_teh(self, text):
+        text = text.replace(TEH_MARBUTA, HEH)
+        return text
+    
+    def _normalize_ligature(self, text):
+        LIGUATURES_PATTERN = re.compile(u"[" + u"".join(LIGATURES) + u"]", re.UNICODE)
+        return LIGUATURES_PATTERN.sub(u'%s%s' % (LAM, ALEF), text)
+    
+    def _normalize_alef(self, text):
+        return re.sub(ALEFS, ALEF, text)
 
     def _remove_extra_spaces(self, text):
         text = re.sub(" +", " ", text)
@@ -123,88 +162,31 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         lines = text.split("\n")
         return ("\n").join([line for line in lines if len(line) > 1])
 
-    def _normalize_dots(self, text):
-        dots_letters = {
-            "ب": list("بتثين"),
-            "ح": list("جحخ"),
-            "د": list("دذ"),
-            "ر": list("رز"),
-            "س": list("سش"),
-            "ص": list("صض"),
-            "ط": list("طظ"),
-            "ع": list("عغ"),
-            "ف": list("فق"),
-            "ا": list("اأإئآؤء"),
-            "ه": list("ةه"),
-        }
-        # convert dots_letters dict to letter-to-letter map
-        letters_map = dict(
-            {
-                letter: k
-                for k, letters_list in dots_letters.items()
-                for letter in letters_list
-            }
-        )
-        normalized_text = text.translate(str.maketrans(letters_map))
-        return normalized_text
-
     def _normalize(self, text):
-        text = araby.strip_diacritics(text)
-        text = araby.normalize_alef(text)
-        text = araby.normalize_ligature(text)
-        text = araby.normalize_teh(text)
-        text = araby.reduce_tashkeel(text)
-
-        return text
-
-    def _normalize(self, text):
-        text = araby.strip_diacritics(text)
-        text = araby.normalize_alef(text)
-        text = araby.normalize_ligature(text)
-        text = araby.normalize_teh(text)
-        text = araby.reduce_tashkeel(text)
+        text = self._remove_diacritics(text)
+        text = self._normalize_alef(text)
+        text = self._normalize_ligature(text)
+        text = self._normalize_teh(text)
 
         return text
 
     def clean_data(self, text):
+        if self.remove_extra_spaces:
+            text = self._remove_extra_spaces(text)
+        if self.remove_empty_lines:
+            text = self._remove_empty_lines(text)
         if self.remove_diacritics:
             text = self._remove_diacritics(text)
         if self.remove_tatweel:
-            text = re.sub("ـ", "", text)
-        if self.normalize_dots:
-            text = self._normalize_dots(text)
+            text = text.replace("ـ", "")
         if self.remove_punctuation:
             text = self._remove_punctuation(text)
-        if self.pyarabic_normalize:
-            text = text.strip()
-            # text = re.sub("ى", "ي", text)
-            # text = re.sub("ؤ", "ء", text)
-            # text = re.sub("ئ", "ء", text)
-            # text = re.sub("ة", "ه", text)
-
-            # remove repetetions
-            # text = re.sub("[إأٱآا]", "ا", text)
-            # text = text.replace('وو', 'و')
-            # text = text.replace('يي', 'ي')
-            # text = text.replace('ييي', 'ي')
-            # text = text.replace('اا', 'ا')
-
-            # text = araby.normalize_alef(text)
-            text = araby.normalize_ligature(text)
-            # text = araby.normalize_teh(text)
-            # text = araby.reduce_tashkeel(text)
-            # text = araby.strip_diacritics(text)
         if self.normalize:
             text = self._normalize(text)
-        if self.reduce_diacritics:
-            text = araby.reduce_tashkeel(text)
         if self.apply_canonical_decomposition:
             text = unicodedata.normalize("NFD", text)
         if self.apply_canonical_decomposition_canonical_composition:
             text = unicodedata.normalize("NFC", text)
-        if self.apply_compatability_decomposition:
+        if self.apply_compatability_decomposition_canonical_composition:
             text = unicodedata.normalize("NFKC", text)
-
-        text = self._remove_extra_spaces(text)
-        text = self._remove_empty_lines(text)
         return text

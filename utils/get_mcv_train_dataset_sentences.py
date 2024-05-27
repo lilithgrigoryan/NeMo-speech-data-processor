@@ -35,6 +35,8 @@ test_sentence_texts = dict((idx, remove_puntuation(pyarabic.araby.strip_diacriti
 
 unique_val_sentence_ids = []
 print("here")
+dev_id_count = 0
+test_id_count = 0
 for val_sentence_id in validated_sentence_ids:
     text = validated_sentences[validated_sentences["sentence_id"] == val_sentence_id]["sentence"].item()
     text = remove_puntuation(pyarabic.araby.strip_diacritics(text))
@@ -57,6 +59,9 @@ for val_sentence_id in validated_sentence_ids:
                 print("test", str(validated_sentences[validated_sentences["sentence_id"] == test_id]["sentence"].item()))
                 print("vald", str(validated_sentences[validated_sentences["sentence_id"] == val_sentence_id]["sentence"].item()))
             # print("Sentence from validated:" + {str(validated_sentences[validated_sentences["sentence_id"] == val_sentence_id]["sentence"].item())} +", from test: " + {str(validated_sentences[validated_sentences["sentence_id"] == test_id]["sentence"].item())})
+
+        dev_id_count += len(dev_ids)
+        test_id_count += len(test_ids)
     else:
         unique_val_sentence_ids.append(val_sentence_id)
         
