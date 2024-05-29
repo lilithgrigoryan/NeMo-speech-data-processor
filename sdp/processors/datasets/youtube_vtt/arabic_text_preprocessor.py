@@ -105,6 +105,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         remove_diacritics: bool = False,
         remove_punctuation: bool = False,
         remove_tatweel: bool = False,
+        normalize_ligature: bool = False,
         apply_canonical_decomposition: bool = False,
         apply_canonical_decomposition_canonical_composition: bool = False,
         apply_compatability_decomposition_canonical_composition: bool = False,
@@ -120,6 +121,7 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
         self.remove_diacritics = remove_diacritics
         self.remove_punctuation = remove_punctuation
         self.remove_tatweel = remove_tatweel
+        self.normalize_ligature = normalize_ligature
         self.normalize = normalize
         self.apply_canonical_decomposition = apply_canonical_decomposition
         self.apply_canonical_decomposition_canonical_composition = (
@@ -182,6 +184,8 @@ class ArabicTextPreprocessor(BaseParallelProcessor):
             text = text.replace("ـ", "")
         if self.remove_punctuation:
             text = self._remove_punctuation(text)
+        if self.normalize_ligature:
+            text = self._normalize_ligature(text)
         if self.normalize:
             text = self._normalize(text)
         if self.apply_canonical_decomposition:

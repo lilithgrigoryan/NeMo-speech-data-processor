@@ -1,7 +1,7 @@
 # no punctuation, no tatweel, no diacritics, no dotted letters
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="configv0_filter.yaml"
 
-processors_to_run: "0:"
+processors_to_run: "23:"
 
 split: noisy_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
@@ -206,11 +206,8 @@ processors:
     input_text_key: text
     remove_diacritics: True
     remove_punctuation: True
-    normalize_dots: False
     remove_tatweel: True
-    pyarabic_normalize: True
-    reduce_diacritics: False
-    apply_compatability_decomposition: False
+    normalize_ligature: True
     output_manifest_file: ${workspace_dir}/manifest18.json
 
   # 19 dropping non alphabetical symbols
@@ -241,18 +238,16 @@ processors:
 
   # 23 removing unnecessary fields
   - _target_: sdp.processors.KeepOnlySpecifiedFields
-    fields_to_keep: ["audio_filepath"]
+    fields_to_keep: ["audio_filepath", "duration"]
     output_manifest_file: ${workspace_dir}/manifest21.json
 
   # 24 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: True
+    remove_diacritics: False
     remove_punctuation: False
-    normalize_dots: False
     remove_tatweel: True
-    pyarabic_normalize: True
-    reduce_diacritics: False
+    normalize_ligature: True
     input_manifest_file: ${workspace_dir}/manifest17.json
     output_manifest_file: ${workspace_dir}/manifest22.json
 
@@ -268,3 +263,8 @@ processors:
     input_manifest_key2: audio_filepath
     input_manifest_file2: ${workspace_dir}/manifest21.json
     output_manifest_file: ${workspace_dir}/manifest24.json
+
+  # # 27 removing unnecessary fields
+  # - _target_: sdp.processors.ChangeToRelativePath
+  #   base_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/filtered_train_masc/noisy_train
+  #   output_manifest_file: ${workspace_dir}/manifest25.json

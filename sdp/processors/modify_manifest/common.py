@@ -354,6 +354,4 @@ class KeepOnlySpecifiedFields(BaseProcessor):
             for line in tqdm(fin):
                 line = json.loads(line)
                 new_line = {field: line[field] for field in self.fields_to_keep}
-                # print("line", line)
-                # print("new_line", new_line)
                 fout.write(json.dumps(new_line, ensure_ascii=False) + "\n")

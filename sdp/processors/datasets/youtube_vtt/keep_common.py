@@ -34,6 +34,10 @@ class KeepCommon(BaseProcessor):
         print(index2.index.size)
         print(m3.index.size)
 
+        print(m1.keys())
+        print(m2.keys())
+        print(m3.keys())
+
         with open(self.output_manifest_file, "wt", encoding="utf8") as fout:
             for _, line in m3.iterrows():
                 fout.write(json.dumps(dict(line), ensure_ascii=False) + "\n")

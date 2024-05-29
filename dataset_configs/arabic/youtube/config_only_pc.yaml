@@ -3,7 +3,7 @@
 
 processors_to_run: "0:"
 
-split: clean_dev # specify dataset type (clean_train, clean_test, ...)
+split: clean_test # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/only_pc/${split}_pc
 
@@ -202,12 +202,10 @@ processors:
   # 19 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: True
+    remove_diacritics: False
     remove_punctuation: False
-    normalize_dots: False
     remove_tatweel: True
-    pyarabic_normalize: True
-    reduce_diacritics: False
+    normalize_ligature: True
     output_manifest_file: ${workspace_dir}/manifest19.json
 
   # 20 removing high low wordrate samples

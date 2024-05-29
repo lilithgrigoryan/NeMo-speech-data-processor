@@ -3,7 +3,7 @@
 
 processors_to_run: "0:"
 
-split: test # specify dataset type (clean_train, clean_test, ...)
+split: dev # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab_fleur/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/fleurs/${split}
 
@@ -74,12 +74,10 @@ processors:
   # 3 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: True
+    remove_diacritics: False
     remove_punctuation: False
-    normalize_dots: False
     remove_tatweel: True
-    pyarabic_normalize: True
-    reduce_diacritics: False
+    normalize_ligature: True
     output_manifest_file: ${workspace_dir}/manifest3.json
 
   # 4 dropping non alphabetical symbols

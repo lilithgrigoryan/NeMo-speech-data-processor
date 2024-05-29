@@ -9,7 +9,7 @@ import re
 
 remove_puntuation = lambda text: re.sub(r"['?!:;\-.,؟،؛\u06D4]", "", text)
 
-dataset_split = "other"
+dataset_split = "train"
 
 dataset_root_dir = "/home/lgrigoryan/datasets/arab_mcv/ar"
 dev_dataset_path = os.path.join(dataset_root_dir, "dev.tsv")
@@ -66,6 +66,7 @@ for val_sentence_id in validated_sentence_ids:
         unique_val_sentence_ids.append(val_sentence_id)
         
 print(len(unique_val_sentence_ids))
+print(len(validated_csv))
 validated_csv = validated_csv[
     validated_csv["sentence_id"].isin(unique_val_sentence_ids)
 ]
