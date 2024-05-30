@@ -23,7 +23,7 @@ class ApplyLlama3(BaseProcessor):
 
     def __init__(
         self,
-        input_example_manifest: str,
+        input_example_manifest: str = None,
         example_query_key: str = "text",
         example_response_key: str = "text_pc",
         pretrained_model: str = "meta-llama/Meta-Llama-3-8B-Instruct",
@@ -63,10 +63,11 @@ class ApplyLlama3(BaseProcessor):
         )
 
         self.messages = [{"role": "system", "content": self.message}]
-        example_manifest = load_manifest(Path(self.input_example_manifest))
-        for data_entry in example_manifest:
-            self.messages.append({"role": "user", "content": data_entry[self.example_query_key]})
-            self.messages.append({"role": "assistant", "content": data_entry[self.example_response_key]})
+        if self.input_example_manifest:
+            example_manifest = load_manifest(Path(self.input_example_manifest))
+            for data_entry in example_manifest:
+                self.messages.append({"role": "user", "content": data_entry[self.example_query_key]})
+                self.messages.append({"role": "assistant", "content": data_entry[self.example_response_key]})
 
     def process(self):
         data_entries = load_manifest(Path(self.input_manifest_file))
@@ -74,7 +75,7 @@ class ApplyLlama3(BaseProcessor):
         with Path(self.output_manifest_file).open("w") as f:
             for data_entry in data_entries:
                 messages = self.messages.copy()
-                messages.append({"role": "user", "content": data_entry[self.input_text_key]})
+                messages.append({"role": "user", "content": "Is this text from Quran? " + data_entry[self.input_text_key]})
 
                 prompt = self.pipeline.tokenizer.apply_chat_template(
                     messages, tokenize=False, add_generation_prompt=True

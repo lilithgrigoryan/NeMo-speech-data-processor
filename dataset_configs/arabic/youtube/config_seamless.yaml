@@ -1,28 +1,51 @@
-# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_whisper.yaml"
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_seamless.yaml"
 processors_to_run: "0:"
 
-split: train # specify dataset type (clean_train, clean_test, ...)
-model_name: whisper-v3
-dataset_name: masc_dev
+model_name: seamless
+dataset_name: fleurs_test
 dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/datasets_pc_diacr/${dataset_name}
-workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/whisper/${dataset_name}
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/${model_name}/${dataset_name}
 results_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/results/${model_name}
 
 processors:
-  # 1 getting whisper predictions
-  - _target_: sdp.processors.ASRTransformers #pip install accelerate transformers
-    pretrained_model: "openai/whisper-large-v3" #"openai/whisper-large-v3"
-    batch_size: 16
-    device: cuda:1
-    output_text_key: pred_text
-    input_manifest_file: ${dataset_dir}/manifest_absolute.json
-    output_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
+  - _target_: sdp.processors.SubRegex
+    text_key: pred_text
+    regex_params_list:
+      - { "pattern": "'", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "’", "repl": "" }
+      - { "pattern": "‘", "repl": "" }
+      - { "pattern": "٬", "repl": "" }
+      - { "pattern": '"', "repl": "" }
+      - { "pattern": "…", "repl": " " }
+      - { "pattern": "«", "repl": " " }
+      - { "pattern": "»", "repl": " " }
+      - { "pattern": "“", "repl": " " }
+      - { "pattern": "”", "repl": " " }
+      - { "pattern": "\\:", "repl": "" }
+      - { "pattern": "؛", "repl": "" }
+      - { "pattern": ",", "repl": "،" }
+      - { "pattern": "!", "repl": "." }
+      - { "pattern": "-", "repl": "" }
+      - { "pattern": "\\s+", "repl": " " }
+      - { "pattern": "\\[\\.\\]+", "repl": "." }
+      - { "pattern": "\u0670", "repl": "" } # removing small alif
+      - { "pattern": "\u06CC", "repl": "\u064A" } # replacing arabic letter farsi yeh with yeh
+      - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
+      - { "pattern": "\\s+\\.", "repl": "." }
+      - { "pattern": "\\s+؟", "repl": "؟" }
+      - { "pattern": "\\s+:", "repl": ":" }
+      - { "pattern": "\\s+،", "repl": "،" }
+      # - { "pattern": "\\s+!", "repl": "!" }
+      - { "pattern": "\\s+", "repl": " " }
+    input_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
+    output_manifest_file: ${workspace_dir}/manifest17.json
 
   # 1 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     text_key: pred_text 
     alphabet: "؟.، \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
-    input_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
     output_manifest_file: ${workspace_dir}/manifest_predictions_processed_${dataset_name}.json
 
    # 2 canonically decomposing then composing reference text
