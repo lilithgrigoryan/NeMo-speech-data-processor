@@ -38,26 +38,7 @@ class CheckIfSentenceIsFromQuran(BaseParallelProcessor):
         self.output_key = output_key
 
     def process_dataset_entry(self, data_entry):
-        text = data_entry[self.input_manifest_text_key]
-        data_entry[self.output_manifest_validation_key] = self.validate_brackets(text)
+        text = data_entry[self.input_text_key]
+        
 
         return [DataEntry(data=data_entry)]
-
-    def validate_brackets(self, text):
-        open_list = ["[", "{", "("]
-        close_list = ["]", "}", ")"]
-
-        stack = []
-        for symbol in text:
-            if symbol in open_list:
-                stack.append(symbol)
-            elif symbol in close_list:
-                pos = close_list.index(symbol)
-                if (len(stack) > 0) and (open_list[pos] == stack[len(stack) - 1]):
-                    stack.pop()
-                else:
-                    return False
-        if len(stack) == 0:
-            return True
-        else:
-            return False

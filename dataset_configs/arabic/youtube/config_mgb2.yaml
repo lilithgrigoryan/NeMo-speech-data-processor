@@ -1,0 +1,24 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_mgb2.yaml"
+
+processors_to_run: "0:"
+
+split: dev # specify dataset type (clean_train, clean_test, ...)
+dataset_dir: /home/lgrigoryan/data/datasets/arab/mgb2
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/mgb2/${split}/new
+
+processors:
+  # 0 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateMGB2Manifest
+    dataset_dir: ${dataset_dir}
+    split: ${split}
+    output_audio_dir: ${workspace_dir}/audios
+    is_buckwalter: True
+    output_manifest_text_key: "text"
+    output_manifest_audio_filepath_key: "audio_filepath"
+    output_manifest_audio_duration: "duration"
+    output_manifest_file: ${workspace_dir}/manifest0.json
+
+  # 0 changing paths to relative
+  - _target_: sdp.processors.ChangeToRelativePath
+    base_dir: ${workspace_dir}
+    output_manifest_file: ${workspace_dir}/manifest.json

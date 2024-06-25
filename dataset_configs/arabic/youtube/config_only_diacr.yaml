@@ -3,7 +3,7 @@
 
 processors_to_run: "0:"
 
-split: clean_dev # specify dataset type (clean_train, clean_test, ...)
+split: noisy_train # specify dataset type (clean_train, clean_test, ...)
 dataset_dir: /home/lgrigoryan/datasets/arab/
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/only_diacr/${split}
 
@@ -138,11 +138,11 @@ processors:
     rename_fields: { "orig_text": "text" }
     output_manifest_file: ${workspace_dir}/manifest15.json
 
-  # 14 normalizing arabic numbers
-  - _target_: sdp.processors.NormalizeNumbers
-    input_text_key: "text"
-    output_text_key: "text"
-    output_manifest_file: ${workspace_dir}/manifest16.json
+  # # 14 normalizing arabic numbers
+  # - _target_: sdp.processors.NormalizeNumbers
+  #   input_text_key: "text"
+  #   output_text_key: "text"
+  #   output_manifest_file: ${workspace_dir}/manifest16.json
 
   # 15 replacing punctuation marks
   - _target_: sdp.processors.SubRegex
@@ -171,16 +171,16 @@ processors:
       - { "pattern": "\u06A9", "repl": "\u063A" } # replacing arabic letter keheh yeh with kaf
     output_manifest_file: ${workspace_dir}/manifest17.json
 
-  # 16 removing punctuation, diacritics, dotted letters and tatweel
-  - _target_: sdp.processors.ArabicTextPreprocessor
-    input_text_key: text
-    remove_diacritics: False
-    remove_punctuation: True
-    normalize_dots: False
-    remove_tatweel: True
-    pyarabic_normalize: True
-    reduce_diacritics: False
-    output_manifest_file: ${workspace_dir}/manifest18.json
+  # # 16 removing punctuation, diacritics, dotted letters and tatweel
+  # - _target_: sdp.processors.ArabicTextPreprocessor
+  #   input_text_key: text
+  #   remove_diacritics: False
+  #   remove_punctuation: True
+  #   normalize_dots: False
+  #   remove_tatweel: True
+  #   pyarabic_normalize: True
+  #   reduce_diacritics: False
+  #   output_manifest_file: ${workspace_dir}/manifest18.json
 
   # 17 removing high low wordrate samples
   - _target_: sdp.processors.DropHighLowWordrate

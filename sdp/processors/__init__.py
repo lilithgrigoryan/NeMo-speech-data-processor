@@ -40,8 +40,10 @@ from sdp.processors.datasets.youtube_vtt import (
     ApplyLlama3,
     ArabicTextPreprocessor,
     CreateDevTestManifest,
+    CreateDialectManifest,
     CreateInitialManifestByExtByCsv,
     CreateInitialManifestFromAljazeera,
+    CreateMGB2Manifest,
     KeepCommon,
 )
 from sdp.processors.datasets.youtube_vtt.filter_vtt_entries import FilterVttText

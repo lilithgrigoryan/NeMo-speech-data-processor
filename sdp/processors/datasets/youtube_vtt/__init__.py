@@ -14,10 +14,12 @@
 
 from .arabic_text_preprocessor import ArabicTextPreprocessor
 from .create_dev_test_manifest import CreateDevTestManifest
+from .create_initial_manifest_dialects import CreateDialectManifest
 from .create_initial_manifest_from_aljazeera_news import (
     CreateInitialManifestFromAljazeera,
 )
 from .create_manifest_csv import CreateInitialManifestByExtByCsv
+from .create_mgb2_dataset import CreateMGB2Manifest
 from .filter_vtt_entries import FilterVttText
 from .keep_common import KeepCommon
 from .llm import ApplyLlama3

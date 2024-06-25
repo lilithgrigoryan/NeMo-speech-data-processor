@@ -1,11 +1,9 @@
 import os
+import re
 
 import pandas as pd
-
 import pyarabic
 import pyarabic.araby
-
-import re
 
 remove_puntuation = lambda text: re.sub(r"['?!:;\-.,؟،؛\u06D4]", "", text)
 normalize = lambda text: remove_puntuation(pyarabic.araby.strip_diacritics(text))
@@ -33,19 +31,26 @@ train_sentence_ids = set(train_csv["sentence_id"])
 validated_sentence_ids = set(validated_csv["sentence_id"])
 other_sentence_ids = set(other_csv["sentence_id"])
 
-validated_sentences["cleaned_sentence"] = validated_sentences['sentence'].apply(normalize)
+validated_sentences["cleaned_sentence"] = validated_sentences["sentence"].apply(normalize)
 validated_sentences = validated_sentences.sort("cleaned_sentence")
-aggregation_functions = {'sentence_id': ', '.join, 'sentence': 'first', 'sentence_domain': 'first', 'source': 'first', 'is_used': 'first', 'clips_count': sum}
-validated_sentences_new = validated_sentences.groupby(validated_sentences['cleaned_sentence']).aggregate(aggregation_functions)
+aggregation_functions = {
+    "sentence_id": ", ".join,
+    "sentence": "first",
+    "sentence_domain": "first",
+    "source": "first",
+    "is_used": "first",
+    "clips_count": sum,
+}
+validated_sentences_new = validated_sentences.groupby(validated_sentences["cleaned_sentence"]).aggregate(
+    aggregation_functions
+)
 print(validated_sentences_new[:10])
 
-validated_sentences_new.to_csv(
-    os.path.join(dataset_root_dir, f"validated_overlap.tsv"), sep="\t"
-)
+validated_sentences_new.to_csv(os.path.join(dataset_root_dir, f"validated_overlap.tsv"), sep="\t")
 
 # dev_csv["cleaned_sentence"] = dev_csv['sentence'].apply(normalize)
-# test_csv["cleaned_sentence"] = test_csv['sentence'].apply(normalize)   
-# train_csv["cleaned_sentence"] = train_csv['sentence'].apply(normalize)   
+# test_csv["cleaned_sentence"] = test_csv['sentence'].apply(normalize)
+# train_csv["cleaned_sentence"] = train_csv['sentence'].apply(normalize)
 # validated_csv["cleaned_sentence"] = validated_csv['sentence'].apply(normalize)
 # other_csv["cleaned_sentence"] = other_csv['sentence'].apply(normalize)
 
@@ -72,13 +77,13 @@ validated_sentences_new.to_csv(
 #         test_ids = []
 #         if text in list(test_sentence_texts.values()):
 #             test_ids = [list(test_sentence_texts.keys())[list(test_sentence_texts.values()).index(text)]]
-        
+
 #         for dev_id in dev_ids:
 #             if (dev_id != val_sentence_id):
 #                 print("dev", validated_sentences[validated_sentences["sentence_id"] == dev_id]["sentence"].item())
 #                 print("val", validated_sentences[validated_sentences["sentence_id"] == val_sentence_id]["sentence"].item())
 #             # print("Sentence from validated:" + {str(validated_sentences[validated_sentences["sentence_id"] == val_sentence_id]["sentence"].item())} + ", from dev: " + {str(validated_sentences[validated_sentences["sentence_id"] == dev_id]["sentence"].item())})
-            
+
 #         for test_id in test_ids:
 #             if (test_id != val_sentence_id):
 #                 print("test", str(validated_sentences[validated_sentences["sentence_id"] == test_id]["sentence"].item()))
@@ -89,7 +94,7 @@ validated_sentences_new.to_csv(
 #         test_id_count += len(test_ids)
 #     else:
 #         unique_val_sentence_ids.append(val_sentence_id)
-        
+
 # print(len(unique_val_sentence_ids))
 # print(len(validated_csv))
 # validated_csv = validated_csv[

@@ -1,9 +1,12 @@
 # python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_wer.yaml"
 processors_to_run: "0:"
 
-dataset_dir: workdir/wer/datasets_pc_diacr
+dataset_dir: workdir/wer/datasets
 workspace_dir: workdir/wer/results
-# model: /home/lgrigoryan/models/diacr_normalized_masc_mcv_fleurs/arabic-asr-diacr-normalized-masc-mvc-fleurs--ngc-bs16xg8xn1xga8--32-averaged.nemo
+
+# model:  /home/lgrigoryan/models/finals/rnnt_no_pc_no_diacr_aug/arabic-asr-no-pc-no-diacr-augx2--ngc-bs16xg8xn1xga8--32.nemo
+# model: /home/lgrigoryan/models/with_lms/pc_no_diacr_tdt_ctc/arabic-asr-tdt-lr-4e3--cs-2-averaged-with-lm.nemo
+# model: /home/lgrigoryan/models/finals/tdt_ctc_pc_no_diacr/checkpoints/arabic-asr-tdt-lr-4e3--cs-2-averaged.nemo
 # model: /home/lgrigoryan/models/no_diacr_normalized_masc_mcv_fleurs/arabic-asr-no-diacr-normalized--ngc-bs16xg8xn1xga8--32.nemo
 # model: /home/lgrigoryan/models/diacr_masc_mcv_from_validated_other/arabic-asr-diacr-mcv_from_validated_other-masc--ngc-bc16xg8xn1xga8--32.nemo
 # model: /home/lgrigoryan/models/diacr_normalized_mcv_fleur/arabic-asr-diacr-normalized-mcv-fleurs--ngc-bs16xg8xn1xga8--32.nemo
@@ -12,10 +15,15 @@ workspace_dir: workdir/wer/results
 # model: /home/lgrigoryan/models/no_diacr_masc_mcv_fleurs_masc_noisy/arabic-asr-no-diacr-mac-mcv-fleurs-masc-noisy--ngc-bs16xg8xn1xga8--32-averaged.nemo
 # model: /home/lgrigoryan/Downloads/Conformer-CTC-L_spe128_ar-AR_2.0.nemo
 # model: /home/lgrigoryan/models/no_diacr_pc_masc_mcv_clean_fleurs_masc_noisy/arabic-asr-no-diacr-pc-restored-batch--ngc-bs16xg8xn1xga8--32.nemo
-model: /home/lgrigoryan/models/diacr_pc_masc_mcv_fleurs_masc_noisy/arabic-asr-diacr-pc-masc-mcv-fleurs-noisy-masc-batch-corr--ngc-bs16xg8xn1xga8--32.nemo
-model_name: nemo_diacr_pc_masc_mcv_fleurs
+# model: /home/lgrigoryan/models/diacr_pc_masc_mcv_fleurs_masc_noisy/arabic-asr-diacr-pc-masc-mcv-fleurs-noisy-masc-batch-corr--ngc-bs16xg8xn1xga8--32.nemo
+# model: /home/lgrigoryan/models/finals/rnnt_ctc_pc_no_diacr/arabic-asr-pc-no-diacr-rnnt-ctc-no-red-averaged.nemo
+# model: /home/lgrigoryan/models/finals/rnnt_ctc_no_pc_no_diacr_cs/arabic-asr-no-pc-no-diacr-rnnt-ctc-no-red-averaged.nemo
+model: /home/lgrigoryan/models/finals/rnnt_ctc_pc_no_diacr_1024/arabic-asr-pc-no-diacr-rnnt-ctc-no-red-gbs1024-averaged.nemo
+# model_name: riva_v3
+# model_name: rnnt_ctc_no_pc_no_diacr
+model_name: rnnt_ctc_pc_no_diacr
 
-dataset_name: mcv_dev
+dataset_name: mediaspeech
 
 processors:
   # ASR inference

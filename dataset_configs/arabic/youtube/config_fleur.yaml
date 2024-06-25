@@ -4,7 +4,7 @@
 processors_to_run: "0:"
 
 split: dev # specify dataset type (clean_train, clean_test, ...)
-dataset_dir: /home/lgrigoryan/datasets/arab_fleur/
+dataset_dir: /home/lgrigoryan/data/datasets/arab/fleurs
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/fleurs/${split}
 
 processors:
@@ -69,19 +69,24 @@ processors:
       # - { "pattern": "!+", "repl": "!" }
       - { "pattern": "؟+", "repl": "؟" }
       - { "pattern": "،+", "repl": "،" }
-    output_manifest_file: ${workspace_dir}/manifest_2.json
+    output_manifest_file: ${workspace_dir}/manifest3.json
 
   # 3 removing punctuation, diacritics, dotted letters and tatweel
   - _target_: sdp.processors.ArabicTextPreprocessor
     input_text_key: text
-    remove_diacritics: False
+    remove_diacritics: True
     remove_punctuation: False
     remove_tatweel: True
     normalize_ligature: True
-    output_manifest_file: ${workspace_dir}/manifest3.json
+    output_manifest_file: ${workspace_dir}/manifest4.json
 
   # 4 dropping non alphabetical symbols
   - _target_: sdp.processors.DropNonAlphabet
     # alphabet: " \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
     alphabet: ":،.! ؟  \u0631\u0630\u062F\u062E\u062D\u062C\u062B\u062A\u0629\u0628\u0627\u0626\u0625\u0624\u0623\u0622\u0621\u064A\u0649\u0648\u0647\u0646\u0645\u0644\u0643\u0642\u0641\u063A\u0639\u0638\u0637\u0636\u0635\u0634\u0633\u0632\u064B\u064C\u064D\u064E\u064F\u0650\u0651\u0652"
-    output_manifest_file: ${workspace_dir}/manifest4.json
+    output_manifest_file: ${workspace_dir}/manifest5.json
+
+  # 5 changing to relaitive
+  - _target_: sdp.processors.ChangeToRelativePath
+    base_dir: ${dataset_dir}
+    output_manifest_file: ${workspace_dir}/manifest.json

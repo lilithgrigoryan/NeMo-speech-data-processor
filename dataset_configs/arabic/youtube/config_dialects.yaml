@@ -1,0 +1,22 @@
+# python main.py --config-path="dataset_configs/arabic/youtube/" --config-name="config_dialects.yaml"
+
+processors_to_run: "0:"
+
+dataset_dir: /home/lgrigoryan/data/datasets/arab/masc
+workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/
+
+split: noisy_dev
+dialect: MSA
+
+processors:
+  # 0 creating manifest {sample_id, audio_path}
+  - _target_: sdp.processors.CreateDialectManifest
+    dataset_audios_dir: ${dataset_dir}/audios
+    dialect: ${dialect}
+    csv_filepaths: ${dataset_dir}/dialects/${split}/${dialect}_data.csv
+    original_csv_path: ${dataset_dir}/subsets/${split}.csv
+    output_audio_dir: ${workspace_dir}/dialects/${split}/${dialect}/audios
+    output_manifest_text_key: "text"
+    output_manifest_audio_filepath_key: "audio_filepath"
+    output_manifest_audio_duration: "duration"
+    output_manifest_file: ${workspace_dir}/dialects/${split}/${dialect}/manifest.json

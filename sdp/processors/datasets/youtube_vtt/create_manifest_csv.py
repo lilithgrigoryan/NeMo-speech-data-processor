@@ -65,11 +65,7 @@ class CreateInitialManifestByExtByCsv(BaseParallelProcessor):
             return set(csv[self.csv_primary_key])
         else:
             return set(
-                [
-                    row[self.csv_primary_key]
-                    for _, row in csv.iterrows()
-                    if row[self.filter_key] == self.filter_value
-                ]
+                [row[self.csv_primary_key] for _, row in csv.iterrows() if row[self.filter_key] == self.filter_value]
             )
 
     def process_dataset_entry(self, sample_id):

@@ -3,17 +3,19 @@ processors_to_run: "0:"
 
 split: train # specify dataset type (clean_train, clean_test, ...)
 model_name: whisper-v3
-dataset_name: masc_dev
-dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/datasets_pc_diacr/${dataset_name}
+dataset_name: test/Syria
+dataset_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/dialects/${dataset_name}
 workspace_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/whisper/${dataset_name}
 results_dir: /home/lgrigoryan/prog/asr_commonvoice_finetuning/NeMo-speech-data-processor/workdir/wer/results/${model_name}
+
+device: cuda:0
 
 processors:
   # 1 getting whisper predictions
   - _target_: sdp.processors.ASRTransformers #pip install accelerate transformers
     pretrained_model: "openai/whisper-large-v3" #"openai/whisper-large-v3"
     batch_size: 16
-    device: cuda:1
+    device: ${device}
     output_text_key: pred_text
     input_manifest_file: ${dataset_dir}/manifest_absolute.json
     output_manifest_file: ${workspace_dir}/manifest_predictions_${dataset_name}.json
@@ -77,4 +79,4 @@ processors:
   - _target_: sdp.processors.KeepOnlySpecifiedFields
     fields_to_keep: ["text", "audio_filepath", "duration"]
     input_manifest_file: ${workspace_dir}/manifest_predictions_processed_${dataset_name}.json
-    output_manifest_file: ${workspace_dir}/manifest_${dataset_name}_whisper_filtered.json
+    output_manifest_file: ${workspace_dir}/manifest_whisper_filtered.json
