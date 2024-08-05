@@ -31,6 +31,9 @@ from sdp.processors.datasets.lhotse import LhotseImport
 from sdp.processors.datasets.librispeech.create_initial_manifest import (
     CreateInitialManifestLibrispeech,
 )
+from sdp.processors.datasets.masc.create_initial_manifest import (
+    CreateInitialManifestMASC,
+)
 from sdp.processors.datasets.mcv.create_initial_manifest import CreateInitialManifestMCV
 from sdp.processors.datasets.mls.create_initial_manifest import CreateInitialManifestMLS
 from sdp.processors.datasets.mls.restore_pc import RestorePCForMLS
@@ -53,6 +56,11 @@ from sdp.processors.datasets.voxpopuli.create_initial_manifest import (
 )
 from sdp.processors.datasets.voxpopuli.normalize_from_non_pc_text import (
     NormalizeFromNonPCTextVoxpopuli,
+)
+from sdp.processors.datasets.youtube import (
+    RegExpVttEntries,
+    GetCaptionFileSegments,
+    AggregateSegments
 )
 from sdp.processors.huggingface.speech_recognition import ASRTransformers, ASRWhisper
 from sdp.processors.modify_manifest.common import (

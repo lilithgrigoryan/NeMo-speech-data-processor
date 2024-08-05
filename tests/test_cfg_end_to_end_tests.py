@@ -45,6 +45,7 @@ data_check_fn_slr102 = partial(data_check_fn_generic, file_name="slr102_kk.tar.g
 data_check_fn_ksc2 = partial(data_check_fn_generic, file_name="ksc2_kk.tar.gz")
 data_check_fn_librispeech = partial(data_check_fn_generic, file_name="dev-clean.tar.gz")
 data_check_fn_fleurs = partial(data_check_fn_generic, file_name="dev.tar.gz")
+data_check_fn_masc = partial(data_check_fn_generic, file_name="masc.tar.gz")
 
 def data_check_fn_voxpopuli(raw_data_dir: str) -> None:
     """Raises error if do not find expected data.
@@ -92,6 +93,7 @@ def get_test_cases() -> List[Tuple[str, Callable]]:
         (f"{DATASET_CONFIGS_ROOT}/kazakh/slr140/config.yaml", data_check_fn_slr140),
         (f"{DATASET_CONFIGS_ROOT}/kazakh/slr102/config.yaml", data_check_fn_slr102),
         (f"{DATASET_CONFIGS_ROOT}/kazakh/ksc2/config.yaml", data_check_fn_ksc2),
+        (f"{DATASET_CONFIGS_ROOT}/arabic/masc/config.yaml", data_check_fn_masc),
     ]
 
 def check_e2e_test_data() -> bool:
